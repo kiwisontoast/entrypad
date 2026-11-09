@@ -1,8 +1,8 @@
-# Doubling
+# Entrypad
 
 Drag a transaction onto the books and watch the T-accounts, the accounting equation and the financial statements move with it.
 
-Doubling is an open-source toolkit for making live, interactive accounting visuals for class presentations and slides. You describe the books in a few lines of plain text, written like the general journal you already know, and Doubling draws linked diagrams you can drag around.
+Entrypad is an open-source toolkit for making live, interactive accounting visuals for class presentations and slides. You describe the books in a few lines of plain text, written like the general journal you already know, and Entrypad draws linked diagrams you can drag around.
 
 > **Status:** early development. Nothing is published to npm yet. This repo will fill up as the first version comes together.
 
@@ -41,7 +41,7 @@ show equation
 
 ## Credits
 
-Doubling builds its drag interactions on [Dragology](https://github.com/declarative-dragging/dragology), the declarative dragging library by Josh Horowitz and Andrew Blinn. Their project site, [Declarative Dragging](https://declarative-dragging.github.io/), inspired this one.
+Entrypad builds its drag interactions on [Dragology](https://github.com/declarative-dragging/dragology), the declarative dragging library by Josh Horowitz and Andrew Blinn. Their project site, [Declarative Dragging](https://declarative-dragging.github.io/), inspired this one.
 
 ## License
 
