@@ -71,6 +71,8 @@ export interface EntrypadSettings {
     staticPartsAsComponents: boolean;
     /** Make each drag follow one finger and abandon drags the browser cancels. */
     singlePointerDrags: boolean;
+    /** A finger on an empty part of a visual scrolls and zooms the page. */
+    touchScroll: boolean;
   };
   export: {
     /** Include squiggles in exported files. */
@@ -134,7 +136,7 @@ export function defaultSettings(): EntrypadSettings {
       exportAccountNames: "type-prefixed",
       exportCurrencySymbol: true,
     },
-    display: { showDiagnostics: true, staticPartsAsComponents: true, singlePointerDrags: true },
+    display: { showDiagnostics: true, staticPartsAsComponents: true, singlePointerDrags: true, touchScroll: true },
     export: { includeDiagnostics: false, pngScale: 2, embedFonts: true },
     sharing: { linkWarningLength: 8000 },
   };
@@ -406,6 +408,15 @@ export const settingsSpec: readonly SettingSpec[] = [
     group: "Display",
     label: "One finger per drag",
     description: "Ignore other fingers during a drag, and drop a drag the browser cancels.",
+    scope: "app",
+    ...onOff,
+  },
+  {
+    key: "display.touchScroll",
+    group: "Display",
+    label: "Scroll with a finger on visuals",
+    description:
+      "A finger on an empty part of a visual scrolls or zooms the page. A finger on something you can drag still drags it.",
     scope: "app",
     ...onOff,
   },

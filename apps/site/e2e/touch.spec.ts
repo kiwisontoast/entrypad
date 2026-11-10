@@ -117,30 +117,50 @@ test.describe("touch", () => {
         .toBe("supplies");
     });
 
-    test("probe: can a finger on the board scroll the page?", async ({ page }, testInfo) => {
+    /** A point on the board with nothing draggable under it: right of the card tray. */
+    async function emptyBoardPoint(page: Page) {
+      const box = (await page.locator("#board svg").boundingBox())!;
+      return { x: Math.min(box.x + box.width - 12, 380), y: 600 };
+    }
+
+    async function swipeUp(page: Page, finger: Finger, start: Point) {
+      await finger.down(start);
+      await finger.glide(start, { x: start.x, y: start.y - 400 }, 10);
+      await finger.up();
+      await page.waitForTimeout(400);
+    }
+
+    test("a finger on an empty part of the board scrolls the page", async ({ page }) => {
       await openSpike(page);
       const finger = await Finger.on(page);
-      // An empty stretch of the board between the card tray and the ledger.
-      const box = (await page.locator("#board svg").boundingBox())!;
-      const start = { x: Math.min(box.x + box.width - 10, 380), y: 600 };
-      const before = await page.evaluate(() => window.scrollY);
-      await finger.down(start);
-      await finger.glide(start, { x: start.x, y: 200 }, 10);
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await swipeUp(page, finger, await emptyBoardPoint(page));
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+      // Nothing was dragged or posted on the way.
+      expect((await journal(page)).book.entries).toHaveLength(2);
+    });
+
+    test("a finger on a card drags it instead of scrolling", async ({ page }) => {
+      await openSpike(page);
+      const finger = await Finger.on(page);
+      const from = await grabPoint(page.locator("#card-rent"));
+      await finger.down(from);
+      await finger.glide(from, { x: from.x + 20, y: from.y + 300 }, 10);
+      expect(await page.evaluate(() => window.__spike.status())).toBe("dragging");
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
       await finger.up();
-      await page.waitForTimeout(300);
-      const after = await page.evaluate(() => window.scrollY);
-      const header = await page.locator("header > p").first().boundingBox();
-      const s2 = { x: 20, y: header!.y + 5 };
-      await finger.down(s2);
-      await finger.glide(s2, { x: 20, y: 5 }, 10);
-      await finger.up();
-      await page.waitForTimeout(300);
-      const afterHeader = await page.evaluate(() => window.scrollY);
-      testInfo.annotations.push({
-        type: "finding",
-        description: `Swipe on board scrolled ${after - before}px; swipe on page header scrolled ${afterHeader - after}px`,
-      });
-      console.log(`[probe scroll] board swipe: ${after - before}px, header swipe: ${afterHeader - after}px`);
+    });
+
+    test("with touch scrolling turned off, the board holds the page still", async ({ page }) => {
+      await openSpike(page);
+      await page.evaluate(() =>
+        localStorage.setItem("entrypad.spike.settings", JSON.stringify({ display: { touchScroll: false } })),
+      );
+      await openSpike(page);
+      const finger = await Finger.on(page);
+      await swipeUp(page, finger, await emptyBoardPoint(page));
+      expect(await page.evaluate(() => window.scrollY)).toBe(0);
+      await page.evaluate(() => localStorage.clear());
     });
   });
 

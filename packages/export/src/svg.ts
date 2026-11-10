@@ -17,7 +17,7 @@ const INTERACTION_STYLE_PROPS = new Set([
 const INHERITED_TEXT_PROPS = ["font-family"];
 
 /** Bookkeeping attributes the drag renderer adds to every element. */
-const RENDERER_ATTRIBUTES = ["data-path"];
+const RENDERER_ATTRIBUTES = ["data-path", "data-entrypad-drag"];
 
 export interface SerializeSvgOptions {
   /**

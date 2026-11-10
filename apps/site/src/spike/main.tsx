@@ -50,6 +50,7 @@ const LIVE = new Set([
   "display.showDiagnostics",
   "display.staticPartsAsComponents",
   "display.singlePointerDrags",
+  "display.touchScroll",
   "export.includeDiagnostics",
 ]);
 
@@ -163,6 +164,7 @@ function App() {
             severities={settings.diagnostics}
             opaqueFrames={settings.display.staticPartsAsComponents}
             singlePointerDrags={settings.display.singlePointerDrags}
+            touchScroll={settings.display.touchScroll}
             maxWidth={maxWidth}
             onDragStatus={perf.onStatus}
           />

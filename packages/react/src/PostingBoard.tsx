@@ -5,6 +5,7 @@ import type { Draggable, DragSpec, DragSpecBuilder, Svgx } from "dragology";
 import { memo, useMemo, useRef } from "react";
 import { usePointerGuard } from "./pointerGuard.js";
 import { theme } from "./theme.js";
+import { DRAG_HANDLE_ATTR, TOUCH_SCROLL_CSS, useTouchScroll } from "./touchScroll.js";
 
 /**
  * A transaction that hasn't been posted yet. One side is known (e.g. "Cr Cash
@@ -44,6 +45,11 @@ export interface PostingBoardProps extends BoardValue {
    * (see usePointerGuard). On by default.
    */
   singlePointerDrags?: boolean;
+  /**
+   * Let a finger on an empty part of the board scroll and zoom the page.
+   * On by default.
+   */
+  touchScroll?: boolean;
   /** Instrumentation hook: called whenever the drag state machine updates. */
   onDragStatus?: (status: "idle" | "dragging") => void;
 }
@@ -218,6 +224,7 @@ function makeBoard(
         <g
           id={id}
           transform={translate(colRight, ROW_TOP + row * ROW_H)}
+          {...DRAG_HANDLE}
           dragologyZIndex={z(id)}
           dragologyOnDrag={() =>
             dropOnAccount(d, state, accounts, account.id, (target) => reclassify(state, p, target))
@@ -305,6 +312,7 @@ function makeBoard(
         <g
           id={id}
           transform={translate(x, y)}
+          {...DRAG_HANDLE}
           dragologyZIndex={z(id)}
           aria-label={`Unposted: ${card.memo}`}
           dragologyOnDrag={() =>
@@ -420,6 +428,9 @@ function squiggle(width: number): string {
 
 const noOverrides: Partial<Record<DiagnosticCode, Severity>> = {};
 
+/** Marks drag handles so a finger on them drags instead of scrolling (see useTouchScroll). */
+const DRAG_HANDLE = { [DRAG_HANDLE_ATTR]: "" };
+
 /**
  * Prototype from the Phase 0 spike: unposted transaction cards above a grid
  * of T-accounts. Dropping a card on an account posts it; dragging a posted
@@ -434,6 +445,7 @@ export function PostingBoard(props: PostingBoardProps) {
     maxWidth = 1200,
     opaqueFrames = true,
     singlePointerDrags = true,
+    touchScroll = true,
     severities = noOverrides,
     onDragStatus,
   } = props;
@@ -454,12 +466,18 @@ export function PostingBoard(props: PostingBoardProps) {
   const state = useMemo<BoardState>(() => ({ book, drafts, highlight: null }), [book, drafts]);
   const container = useRef<HTMLDivElement>(null);
   const epoch = usePointerGuard(container, () => onDragStatus?.("idle"), singlePointerDrags);
+  useTouchScroll(container, touchScroll);
 
   return (
     // The font is set here, not on a group inside the SVG: Dragology lifts
     // elements with an id out of their parent groups, so they would not
     // inherit it. From here it reaches the <svg> and everything in it.
-    <div ref={container} style={{ display: "contents", fontFamily: theme.font }}>
+    <div
+      ref={container}
+      className={touchScroll ? "entrypad-board" : undefined}
+      style={{ display: "contents", fontFamily: theme.font }}
+    >
+      {touchScroll && <style>{TOUCH_SCROLL_CSS}</style>}
       <DraggableRenderer<BoardState>
         // A new epoch remounts the renderer, which aborts a cancelled drag.
         key={epoch}
