@@ -1,3 +1,6 @@
+import { documentFontFaces, fontsUsed, inlineFontFaceCss, selectFaces } from "./fonts.js";
+import type { Fetcher, FontFaceSource } from "./fonts.js";
+
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XLINK_NS = "http://www.w3.org/1999/xlink";
 
@@ -38,7 +41,50 @@ export interface SerializeSvgOptions {
  * uses presentation attributes or inline styles rather than page CSS.
  */
 export function serializeSvg(svg: SVGSVGElement, options: SerializeSvgOptions = {}): string {
-  const { includeDiagnostics = false, background, xmlDeclaration = true } = options;
+  return toText(exportClone(svg, options), options);
+}
+
+export interface SerializeWithFontsOptions extends SerializeSvgOptions {
+  /** Embed the web fonts the visual uses. On by default (setting export.embedFonts). */
+  embedFonts?: boolean;
+  /** The page's @font-face rules. Defaults to reading the document's stylesheets. */
+  faces?: FontFaceSource[];
+  fetcher?: Fetcher;
+}
+
+/**
+ * Like serializeSvg, but also embeds the web fonts the visual draws with, as
+ * base64 @font-face rules, so the file renders with the same lettering in
+ * other apps. System fonts are left alone. Only the weights used and the
+ * character subsets drawn are included.
+ */
+export async function serializeSvgWithFonts(
+  svg: SVGSVGElement,
+  options: SerializeWithFontsOptions = {},
+): Promise<string> {
+  const clone = exportClone(svg, options);
+  if (options.embedFonts !== false) {
+    const { uses, chars } = fontsUsed(svg);
+    const faces = selectFaces(options.faces ?? documentFontFaces(svg.ownerDocument), uses, chars);
+    if (faces.length) {
+      const doc = clone.ownerDocument;
+      const style = doc.createElementNS(SVG_NS, "style");
+      style.textContent = await inlineFontFaceCss(faces, options.fetcher);
+      const defs = doc.createElementNS(SVG_NS, "defs");
+      defs.appendChild(style);
+      clone.insertBefore(defs, clone.firstChild);
+    }
+  }
+  return toText(clone, options);
+}
+
+function toText(clone: SVGSVGElement, { xmlDeclaration = true }: SerializeSvgOptions): string {
+  const body = new XMLSerializer().serializeToString(clone);
+  return xmlDeclaration ? `<?xml version="1.0" encoding="UTF-8"?>\n${body}` : body;
+}
+
+function exportClone(svg: SVGSVGElement, options: SerializeSvgOptions): SVGSVGElement {
+  const { includeDiagnostics = false, background } = options;
   const clone = svg.cloneNode(true) as SVGSVGElement;
 
   if (!includeDiagnostics) {
@@ -78,9 +124,7 @@ export function serializeSvg(svg: SVGSVGElement, options: SerializeSvgOptions = 
     rect.setAttribute("fill", background);
     clone.insertBefore(rect, clone.firstChild);
   }
-
-  const body = new XMLSerializer().serializeToString(clone);
-  return xmlDeclaration ? `<?xml version="1.0" encoding="UTF-8"?>\n${body}` : body;
+  return clone;
 }
 
 /** Wraps serialized SVG text in a Blob with the right media type. */
