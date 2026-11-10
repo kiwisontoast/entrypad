@@ -1,0 +1,12 @@
+[build]
+  # The site bundles the workspace packages from source, so only it needs building.
+  command = "pnpm --filter @entrypad/site build"
+  publish = "apps/site/dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[[headers]]
+  for = "/spike/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"

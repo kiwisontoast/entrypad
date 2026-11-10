@@ -4,7 +4,7 @@ Drag a transaction onto the books and watch the T-accounts, the accounting equat
 
 Entrypad is an open-source toolkit for accountants. It turns plain-text journal entries into live accounting visuals for presentations and reports. You write the books the way you would write a general journal, and Entrypad draws linked diagrams you can drag to change.
 
-> **Status:** early development. Nothing is published to npm yet. This repo will fill up as the first version comes together.
+> **Status:** early development. The `entrypad` package on npm is a placeholder for now. This repo will fill up as the first version comes together.
 
 ## What it will do
 
@@ -38,6 +38,23 @@ show equation
 3. Corporate finance: a DCF template where you drag the discount rate and growth assumptions and watch the valuation change, tied back to the cash flow statement.
 4. Intermediate accounting: leases, bonds, deferred taxes and revenue recognition.
 5. Managerial accounting: cost-volume-profit, budgets, job costing and variances.
+
+## Development
+
+You need Node 24 or later and pnpm 10. With Corepack, `corepack enable` picks up the pnpm version pinned in `package.json`. Without it, install pnpm with `npm install -g pnpm@10`.
+
+```
+pnpm install     # install dependencies
+pnpm dev         # run the site locally at http://localhost:5173
+pnpm test        # unit tests
+pnpm typecheck   # TypeScript checks across every package
+pnpm build       # build the packages and the site
+pnpm e2e         # browser tests
+```
+
+Before the first `pnpm e2e`, install the test browser once with `pnpm --filter @entrypad/site exec playwright install chromium`.
+
+The repo is a pnpm workspace. `packages/core` holds the book model and has no React dependency. `packages/react` holds the visuals, `packages/export` handles exporting them (SVG first, with PNG and GIF to follow), and `apps/site` is the website.
 
 ## Credits
 
