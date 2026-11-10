@@ -4,8 +4,8 @@
   --muted: #5b6573;
   --rule: #dcd8cf;
   --link: #1d4e89;
-  --serif: "Iowan Old Style", "Palatino Linotype", Charter, Georgia, serif;
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: var(--font-heading);
+  --sans: var(--font-text);
 }
 
 @media (prefers-color-scheme: dark) {

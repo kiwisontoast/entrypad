@@ -18,9 +18,12 @@ test("a mid-drag frame exports as a standalone SVG that matches the screen", asy
   expect(await page.evaluate(() => window.__spike.status())).toBe("dragging");
   await expect(page.locator("#dx-abnormal-cash")).toHaveCount(1);
 
+  await page.evaluate(() => document.fonts.ready);
   const onScreen = await page.locator("#board svg").screenshot();
-  const withDiagnostics = await page.evaluate(() => window.__spike.exportSvg({ includeDiagnostics: true }));
-  const exported = await page.evaluate(() => window.__spike.exportSvg());
+  // The pixel comparison renders the file as an <img>, which can't see the
+  // page's web fonts, so it only matches if the fonts are embedded.
+  const withDiagnostics = await page.evaluate(() => window.__spike.exportSvgWithFonts({ includeDiagnostics: true }));
+  const exported = await page.evaluate(() => window.__spike.exportSvgWithFonts());
   await page.mouse.up();
 
   await testInfo.attach("mid-drag.svg", { body: exported, contentType: "image/svg+xml" });
@@ -40,6 +43,14 @@ test("a mid-drag frame exports as a standalone SVG that matches the screen", asy
     exported,
   );
   expect(parseError).toBeNull();
+
+  // Fonts travel inside the file: Source Sans 3 as data, nothing fetched from elsewhere.
+  expect(exported).toContain('font-family:"Source Sans 3"');
+  expect(exported).toMatch(/src:url\(data:font\/woff2;base64,/);
+  expect(exported).not.toMatch(/url\((?!data:)/);
+  expect(exported.length).toBeLessThan(400_000);
+  testInfo.annotations.push({ type: "export size", description: `${Math.round(exported.length / 1024)} KB` });
+  console.log(`[export] file size with fonts: ${Math.round(exported.length / 1024)} KB`);
 
   // The dragged card is in the exported frame, posted state previewed.
   expect(exported).toContain('id="card-van"');

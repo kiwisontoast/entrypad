@@ -1,0 +1,6 @@
+/* Keep these stacks in step with `theme` in @entrypad/react. */
+:root {
+  --font-heading: Spectral, Georgia, "Times New Roman", serif;
+  --font-text: "Source Sans 3", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  --font-mono: "Source Code Pro", ui-monospace, Consolas, "SF Mono", Menlo, monospace;
+}

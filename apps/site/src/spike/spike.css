@@ -15,7 +15,7 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--ink);
-  font: 14px/1.5 Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font: 14px/1.5 var(--font-text);
 }
 
 main {
@@ -29,7 +29,9 @@ header {
 
 h1 {
   margin: 0 0 4px;
-  font-size: 18px;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
 }
 
 p {

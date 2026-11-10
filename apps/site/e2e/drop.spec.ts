@@ -59,7 +59,7 @@ test.describe("posting by drag", () => {
     await openSpike(page);
     await page.addStyleTag({ content: "body { font-family: 'Times New Roman', serif !important; }" });
     const font = await page.locator("#t-cash text").first().evaluate((el) => getComputedStyle(el).fontFamily);
-    expect(font).toMatch(/^Inter/);
+    expect(font).toMatch(/^"Source Sans 3"/);
   });
 
   test("an overdraft shows a diagnostic squiggle under Cash", async ({ page }) => {

@@ -1,13 +1,14 @@
 import { resolveSettings } from "@entrypad/core";
 import type { EntrypadSettings } from "@entrypad/core";
-import { serializeSvg, svgBlob } from "@entrypad/export";
-import type { SerializeSvgOptions } from "@entrypad/export";
+import { serializeSvg, serializeSvgWithFonts, svgBlob } from "@entrypad/export";
+import type { SerializeSvgOptions, SerializeWithFontsOptions } from "@entrypad/export";
 import { PostingBoard, SettingsPanel } from "@entrypad/react";
 import type { BoardValue } from "@entrypad/react";
 import { Profiler, StrictMode, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createPerf } from "./perf.js";
 import { chartWith, sampleBook, sampleDrafts } from "./sample.js";
+import "../typography.js";
 import "./spike.css";
 
 const params = new URLSearchParams(location.search);
@@ -52,6 +53,7 @@ const LIVE = new Set([
   "display.singlePointerDrags",
   "display.touchScroll",
   "export.includeDiagnostics",
+  "export.embedFonts",
 ]);
 
 function boardSvg(): SVGSVGElement {
@@ -66,6 +68,7 @@ declare global {
       value: () => BoardValue;
       status: () => "idle" | "dragging";
       exportSvg: (options?: SerializeSvgOptions) => string;
+      exportSvgWithFonts: (options?: SerializeWithFontsOptions) => Promise<string>;
       settings: () => EntrypadSettings;
       perf: typeof perf.log;
     };
@@ -96,6 +99,12 @@ function App() {
       status: () => perf.status,
       exportSvg: (options) =>
         serializeSvg(boardSvg(), options ?? { includeDiagnostics: settingsRef.current.export.includeDiagnostics }),
+      exportSvgWithFonts: (options) =>
+        serializeSvgWithFonts(boardSvg(), {
+          includeDiagnostics: settingsRef.current.export.includeDiagnostics,
+          embedFonts: settingsRef.current.export.embedFonts,
+          ...options,
+        }),
       settings: () => settingsRef.current,
       perf: perf.log,
     };
@@ -108,8 +117,11 @@ function App() {
     [value.book, settings.book.decimals],
   );
 
-  const download = () => {
-    const text = serializeSvg(boardSvg(), { includeDiagnostics: settings.export.includeDiagnostics });
+  const download = async () => {
+    const text = await serializeSvgWithFonts(boardSvg(), {
+      includeDiagnostics: settings.export.includeDiagnostics,
+      embedFonts: settings.export.embedFonts,
+    });
     const url = URL.createObjectURL(svgBlob(text));
     const a = document.createElement("a");
     a.href = url;
