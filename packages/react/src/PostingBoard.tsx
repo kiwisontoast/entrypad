@@ -1,5 +1,5 @@
-import { balances, formatCents } from "@entrypad/core";
-import type { Account, AccountBalance, Book, Entry, Posting, Side } from "@entrypad/core";
+import { balances, diagnosticDefaults, formatCents } from "@entrypad/core";
+import type { Account, AccountBalance, Book, DiagnosticCode, Entry, Posting, Severity, Side } from "@entrypad/core";
 import { DraggableRenderer, translate } from "dragology";
 import type { Draggable, DragSpec, DragSpecBuilder, Svgx } from "dragology";
 import { memo, useMemo, useRef } from "react";
@@ -29,6 +29,8 @@ export interface PostingBoardProps extends BoardValue {
   accounts?: string[];
   /** Draw the diagnostics overlay (editor only; never in exports). */
   showDiagnostics?: boolean;
+  /** Severity of each check, from settings. Defaults to the registry's. */
+  severities?: Partial<Record<DiagnosticCode, Severity>>;
   /** Width available for the visual, used to pick a column count. */
   maxWidth?: number;
   /**
@@ -37,6 +39,11 @@ export interface PostingBoardProps extends BoardValue {
    * draws them as plain SVG, for comparison.
    */
   opaqueFrames?: boolean;
+  /**
+   * Make each drag follow one pointer and abandon drags the browser cancels
+   * (see usePointerGuard). On by default.
+   */
+  singlePointerDrags?: boolean;
   /** Instrumentation hook: called whenever the drag state machine updates. */
   onDragStatus?: (status: "idle" | "dragging") => void;
 }
@@ -196,6 +203,7 @@ function makeBoard(
   layout: Layout,
   showDiagnostics: boolean,
   opaqueFrames: boolean,
+  severities: Partial<Record<DiagnosticCode, Severity>>,
 ): Draggable<BoardState> {
   const T_W = layout.tW;
 
@@ -353,7 +361,8 @@ function makeBoard(
     };
 
     const diagnostics: Svgx[] = [];
-    if (showDiagnostics) {
+    const abnormal = severities["abnormal-balance"] ?? diagnosticDefaults["abnormal-balance"];
+    if (showDiagnostics && abnormal !== "off") {
       accounts.forEach((a, i) => {
         const row = totals.get(a.id);
         if (!row || row.balance >= 0) return;
@@ -367,7 +376,7 @@ function makeBoard(
             transform={translate(x + right - 52, y + T_H - 8)}
             d={squiggle(54)}
             fill="none"
-            stroke={theme.error}
+            stroke={theme[abnormal]}
             strokeWidth={1.25}
           >
             <title>{`${a.name} has an abnormal balance`}</title>
@@ -409,6 +418,8 @@ function squiggle(width: number): string {
   return d;
 }
 
+const noOverrides: Partial<Record<DiagnosticCode, Severity>> = {};
+
 /**
  * Prototype from the Phase 0 spike: unposted transaction cards above a grid
  * of T-accounts. Dropping a card on an account posts it; dragging a posted
@@ -422,6 +433,8 @@ export function PostingBoard(props: PostingBoardProps) {
     showDiagnostics = true,
     maxWidth = 1200,
     opaqueFrames = true,
+    singlePointerDrags = true,
+    severities = noOverrides,
     onDragStatus,
   } = props;
 
@@ -433,14 +446,14 @@ export function PostingBoard(props: PostingBoardProps) {
 
   const layout = computeLayout(accounts.length, drafts.length, maxWidth);
   const draggable = useMemo(
-    () => makeBoard(accounts, layout, showDiagnostics, opaqueFrames),
+    () => makeBoard(accounts, layout, showDiagnostics, opaqueFrames, severities),
     // Layout is plain numbers; rebuild only when they change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [accounts, layout.cols, layout.tW, layout.width, layout.height, layout.cardsPerRow, layout.gridTop, showDiagnostics, opaqueFrames],
+    [accounts, layout.cols, layout.tW, layout.width, layout.height, layout.cardsPerRow, layout.gridTop, showDiagnostics, opaqueFrames, severities],
   );
   const state = useMemo<BoardState>(() => ({ book, drafts, highlight: null }), [book, drafts]);
   const container = useRef<HTMLDivElement>(null);
-  const epoch = usePointerGuard(container, () => onDragStatus?.("idle"));
+  const epoch = usePointerGuard(container, () => onDragStatus?.("idle"), singlePointerDrags);
 
   return (
     // The font is set here, not on a group inside the SVG: Dragology lifts

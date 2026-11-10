@@ -62,6 +62,25 @@ a {
   color: var(--accent);
 }
 
+#settings {
+  margin-top: 12px;
+}
+
+#settings summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+#settings .note {
+  font-size: 13px;
+}
+
+#settings[open] {
+  max-width: 760px;
+  padding-bottom: 8px;
+}
+
 #board {
   margin-top: 8px;
 }

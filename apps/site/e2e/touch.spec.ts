@@ -129,7 +129,7 @@ test.describe("touch", () => {
       await finger.up();
       await page.waitForTimeout(300);
       const after = await page.evaluate(() => window.scrollY);
-      const header = await page.locator("header p").boundingBox();
+      const header = await page.locator("header > p").first().boundingBox();
       const s2 = { x: 20, y: header!.y + 5 };
       await finger.down(s2);
       await finger.glide(s2, { x: 20, y: 5 }, 10);

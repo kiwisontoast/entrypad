@@ -9,6 +9,8 @@ export const theme = {
   accent: "#0b5cad",
   accentSoft: "#e3effb",
   error: "#c62828",
+  warning: "#b26a00",
+  hint: "#0b5cad",
 } as const;
 
 export type Theme = typeof theme;

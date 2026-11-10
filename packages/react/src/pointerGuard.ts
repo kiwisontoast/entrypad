@@ -15,12 +15,17 @@ import type { RefObject } from "react";
  *   Use it as the renderer's `key`: remounting a controlled renderer drops
  *   the drag and leaves the state as it was before the gesture.
  */
-export function usePointerGuard(container: RefObject<Element | null>, onAbort?: () => void): number {
+export function usePointerGuard(
+  container: RefObject<Element | null>,
+  onAbort?: () => void,
+  enabled = true,
+): number {
   const [epoch, setEpoch] = useState(0);
   const onAbortRef = useRef(onAbort);
   onAbortRef.current = onAbort;
 
   useEffect(() => {
+    if (!enabled) return;
     let active: number | null = null;
 
     const onDown = (e: PointerEvent) => {
@@ -56,7 +61,7 @@ export function usePointerGuard(container: RefObject<Element | null>, onAbort?: 
       document.removeEventListener("pointerup", onUp, opts);
       document.removeEventListener("pointercancel", onCancel, opts);
     };
-  }, [container]);
+  }, [container, enabled]);
 
   return epoch;
 }
