@@ -54,6 +54,8 @@ pnpm e2e         # browser tests
 
 Before the first `pnpm e2e`, install the test browser once with `pnpm --filter @entrypad/site exec playwright install chromium`.
 
+`pnpm dev` also serves two development pages that aren't part of the published site: `/spike/`, a prototype of dragging entries onto T-accounts, and `/fonts/`, a typeface comparison. To try them on a phone, run `pnpm --filter @entrypad/site dev:phone` and open the network address it prints on a phone on the same Wi-Fi.
+
 The repo is a pnpm workspace. `packages/core` holds the book model and has no React dependency. `packages/react` holds the visuals, `packages/export` handles exporting them (SVG first, with PNG and GIF to follow), and `apps/site` is the website.
 
 ## Credits

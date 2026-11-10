@@ -9,6 +9,11 @@ const root = import.meta.dirname;
 // tests use it; normal builds don't.
 const profile = process.env.ENTRYPAD_PROFILE === "1";
 
+// Development pages (the drag spike and the font test) are for the team only.
+// `vite dev` serves them as usual; production builds leave them out unless
+// ENTRYPAD_INTERNAL=1. The e2e build (ENTRYPAD_PROFILE=1) includes them.
+const internal = profile || process.env.ENTRYPAD_INTERNAL === "1";
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -19,8 +24,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(root, "index.html"),
-        spike: resolve(root, "spike/index.html"),
-        fonts: resolve(root, "fonts/index.html"),
+        ...(internal && {
+          spike: resolve(root, "spike/index.html"),
+          fonts: resolve(root, "fonts/index.html"),
+        }),
       },
     },
   },
