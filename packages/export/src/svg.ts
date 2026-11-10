@@ -13,6 +13,9 @@ const INTERACTION_STYLE_PROPS = new Set([
   "pointer-events",
 ]);
 
+/** Inherited text properties copied from the page onto the exported root. */
+const INHERITED_TEXT_PROPS = ["font-family"];
+
 /** Bookkeeping attributes the drag renderer adds to every element. */
 const RENDERER_ATTRIBUTES = ["data-path"];
 
@@ -47,6 +50,15 @@ export function serializeSvg(svg: SVGSVGElement, options: SerializeSvgOptions = 
   for (const el of [clone, ...Array.from(clone.querySelectorAll("*"))]) {
     stripInteractionStyles(el);
     for (const attr of RENDERER_ATTRIBUTES) el.removeAttribute(attr);
+  }
+
+  // Text styles the live SVG inherits from the page don't travel with the
+  // file, so write the resolved values onto the root, where every layer
+  // inherits them.
+  const computed = svg.ownerDocument.defaultView?.getComputedStyle(svg);
+  for (const prop of INHERITED_TEXT_PROPS) {
+    const value = computed?.getPropertyValue(prop).trim();
+    if (value && !clone.hasAttribute(prop)) clone.setAttribute(prop, value);
   }
 
   const { width, height } = measure(svg);

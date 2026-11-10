@@ -52,6 +52,12 @@ describe("serializeSvg", () => {
     expect(svg.querySelector("#t-cash")?.getAttribute("style")).toBe("cursor: grab");
   });
 
+  it("carries the font the page gives the visual", () => {
+    document.body.innerHTML = `<div style="font-family: Georgia, serif">${markup}</div>`;
+    const out = serializeSvg(document.querySelector("svg") as SVGSVGElement);
+    expect(out).toMatch(/<svg[^>]*font-family="Georgia, serif"/);
+  });
+
   it("adds a background when asked", () => {
     expect(serializeSvg(render(markup), { background: "#ffffff" })).toContain('fill="#ffffff"');
   });

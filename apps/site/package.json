@@ -1,0 +1,32 @@
+{
+  "name": "@entrypad/site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@entrypad/core": "workspace:*",
+    "@entrypad/export": "workspace:*",
+    "@entrypad/react": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "^24.19.2",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "pixelmatch": "8.0.0",
+    "pngjs": "7.0.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.7"
+  }
+}
