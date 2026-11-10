@@ -1,0 +1,328 @@
+:root {
+  --canvas: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #1f2328;
+  --muted: #59636e;
+  --border: #d0d7de;
+  --accent: #0b5cad;
+  --accent-soft: #e3effb;
+  --code-bg: #f0f2f5;
+}
+
+.page[data-theme="dark"] {
+  --canvas: #15181c;
+  --surface: #1d2126;
+  --ink: #e6e8eb;
+  --muted: #9aa3ad;
+  --border: #353b43;
+  --accent: #7ab4f5;
+  --accent-soft: #1d2f45;
+  --code-bg: #23282e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f9;
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--ink);
+  font: 15px/1.55 "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  padding: 24px 16px 48px;
+}
+
+.top,
+.pairings,
+.controls,
+.preview,
+.css {
+  max-width: 1080px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.top h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.top p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+/* Pairing cards */
+
+.pairings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.pairing {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+}
+
+/* On phones, the pairings become a swipeable row so the preview stays close. */
+@media (max-width: 700px) {
+  .pairings {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 82%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 6px;
+  }
+
+  .pairing {
+    scroll-snap-align: start;
+  }
+}
+
+.pairing:hover {
+  border-color: var(--accent);
+}
+
+.pairing[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.pairing-name {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pick {
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0 7px;
+}
+
+.pairing-heading {
+  font-family: var(--heading);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.pairing-text {
+  font-family: var(--text);
+}
+
+.pairing-figures {
+  font-family: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.pairing-why {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Mix and match */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-end;
+  margin-top: 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.controls label.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+}
+
+.controls select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+/* The preview, in the chosen fonts */
+
+.preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px clamp(16px, 5vw, 56px) 40px;
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.preview > * {
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.preview h1,
+.preview h2 {
+  font-family: var(--heading);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.preview h1 {
+  font-size: clamp(36px, 7vw, 52px);
+  margin: 0 auto 12px;
+}
+
+.preview h2 {
+  font-size: 24px;
+  margin: 36px auto 8px;
+}
+
+.preview .lede {
+  font-size: 19px;
+  color: var(--ink);
+}
+
+.preview p {
+  margin-top: 0;
+}
+
+.preview pre {
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.taccounts {
+  display: block;
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+  font-family: var(--text);
+}
+
+.t-box {
+  fill: var(--surface);
+  stroke: var(--border);
+}
+
+.t-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.t-rule {
+  stroke: var(--ink);
+  stroke-width: 1.25;
+}
+
+.t-num {
+  font-size: 12px;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.t-bal {
+  font-weight: 600;
+}
+
+.t-label {
+  font-size: 11px;
+  fill: var(--muted);
+}
+
+.preview table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview th,
+.preview td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.preview th {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.preview .num {
+  text-align: right;
+}
+
+.preview tfoot td {
+  font-weight: 600;
+  border-bottom: 3px double var(--ink);
+}
+
+.preview .glyphs {
+  margin-top: 24px;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+}
+
+.css {
+  margin-top: 24px;
+}
+
+.css h2 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.css pre {
+  margin: 0;
+  font: 13px/1.5 ui-monospace, Consolas, "SF Mono", Menlo, monospace;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

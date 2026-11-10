@@ -20,6 +20,7 @@ export default defineConfig({
       input: {
         main: resolve(root, "index.html"),
         spike: resolve(root, "spike/index.html"),
+        fonts: resolve(root, "fonts/index.html"),
       },
     },
   },

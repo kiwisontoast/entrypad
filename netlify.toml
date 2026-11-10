@@ -10,3 +10,8 @@
   for = "/spike/*"
   [headers.values]
     X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
