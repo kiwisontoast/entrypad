@@ -3,9 +3,14 @@ node_modules/
 
 # Build output
 dist/
+dist-profile/
 build/
 .vite/
 coverage/
+
+# Test output
+playwright-report/
+test-results/
 
 # Netlify
 .netlify/
