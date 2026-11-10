@@ -12,6 +12,9 @@ import {
   settingsSpec,
 } from "./settings.js";
 
+/** En dash and em dash, built from char codes so this file contains neither. */
+const DASHES = new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`);
+
 /** Every leaf of an object, as dotted paths. */
 function leaves(obj: object, prefix = ""): string[] {
   return Object.entries(obj).flatMap(([k, v]) =>
@@ -47,7 +50,7 @@ describe("settings registry", () => {
   it("uses no dashes that the project style rules out", () => {
     for (const spec of settingsSpec) {
       const text = [spec.label, spec.description, ...("choices" in spec ? spec.choices.map((c) => c.label) : [])];
-      for (const t of text) expect(t).not.toMatch(/[–—]/);
+      for (const t of text) expect(t).not.toMatch(DASHES);
     }
   });
 });

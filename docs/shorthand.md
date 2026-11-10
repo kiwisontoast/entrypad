@@ -46,7 +46,7 @@ The parser reads the file one line at a time. Every line is one of these:
 | Blank | Nothing but spaces or tabs |
 | Comment | First non-space character is `#` or `;` |
 | Entry header | Starts at the first column with a date or `-` |
-| Directive | Starts at the first column with `book`, `open`, `account` or `show` followed by a space |
+| Directive | Starts at the first column with `book`, `open`, `account`, `show` or `set` followed by a space |
 | Posting | Any other line that follows an entry header |
 
 Comments take up a whole line. There are no end-of-line comments, so a memo such as `Invoice #12` is read as written.
@@ -197,6 +197,51 @@ show cash-flow: indirect
 
 This picks the visuals a slide displays, in order. The Phase 1 visuals are `entry-cards`, `t-accounts`, `equation`, `statement-flow`, `cash-flow`, `trial-balance` and `schedule`. Options follow a colon. For `t-accounts` they are the accounts to draw; for `cash-flow` they are `direct` or `indirect`. Without any `show` lines, the editor chooses a default view.
 
+### `set`
+
+```
+set parsing.dateOrder day-first
+set autofix.inferBlankAmount off
+set diagnostics.zero-amount off
+```
+
+This changes one setting for this book. The line applies to the whole file, wherever it sits. On-off settings take `on` or `off` (`yes`, `no`, `true` and `false` work too). A setting or value Entrypad doesn't know is ignored and flagged `unknown-setting`.
+
+Only settings that affect how a book is read or checked can go in a file. They are listed under [Settings](#settings). Display and export preferences belong to the person viewing the book, so they live in each person's own settings.
+
+A `set` line in the file overrides your own settings for that book. When you save or share a book, the editor writes a `set` line for each of these settings you have changed from its default, so the book reads the same for everyone who opens it.
+
+## Settings
+
+Every rule on this page that involves a choice has a setting, and the default is the behavior described above. You can change any of them in the editor's settings, or for one book with a `set` line.
+
+| Setting | Default | What it controls |
+| --- | --- | --- |
+| `book.decimals` | `0` | Show whole dollars (`0`) or dollars and cents (`2`). Amounts are always stored exactly. |
+| `parsing.tabWidth` | `4` | A tab advances to the next multiple of this many columns. |
+| `parsing.dateOrder` | `month-first` | Whether `1/3` is January 3 or 1 March (`day-first`). |
+| `parsing.yearFromPeriod` | `on` | A date without a year takes the year that puts it inside the period. |
+| `parsing.yearFromPreviousEntry` | `on` | Otherwise it takes the year of the nearest dated entry above. |
+| `parsing.hashComments` | `on` | Lines starting with `#` are comments. |
+| `parsing.semicolonComments` | `on` | Lines starting with `;` are comments. |
+| `parsing.endOfLineComments` | `off` | A comment can follow content on the same line. |
+| `parsing.normalizeSpaces` | `on` | Non-breaking spaces count as ordinary spaces. |
+| `parsing.blankLineEndsEntry` | `on` | A blank line ends an entry. |
+| `parsing.thousandsSuffix` | `on` | `10k` means 10,000. |
+| `parsing.negativeAmounts` | `same-side` | A negative amount is read on the line's own side, on the other side (`other-side`), or as unreadable (`invalid`). |
+| `parsing.oneLineCommas` | `after-amount` | In the one-line form, a comma splits postings only after an amount, or `always`. |
+| `parsing.duplicateBook` | `last-wins` | Which `book` line counts when there are several (`first-wins` is the other choice). |
+| `accounts.ignoreCase` | `on` | Account names match without regard to case. |
+| `accounts.collapseSpaces` | `on` | Runs of spaces in a name count as one. |
+| `accounts.matchAliases` | `on` | Aliases such as `A/R` match. |
+| `accounts.matchIds` | `on` | Ids such as `accounts-receivable` match. |
+| `autofix.inferBlankAmount` | `on` | The one blank amount in an entry is filled in. When off, it stays blank and the entry is flagged as unbalanced. |
+| `diagnostics.<code>` | as listed under [Errors](#errors-and-how-the-parser-recovers) | The severity of each check: `error`, `warning`, `hint` or `off`. |
+| `hledger.importMatch` | `last-segment` | Imported account names match by their last part, or by the `full-name`. |
+| `hledger.keepUnsupportedAsComments` | `on` | Unused imported directives are kept as comments rather than dropped. |
+| `hledger.exportAccountNames` | `type-prefixed` | Exported names look like `assets:cash`, or `plain` like `Cash`. |
+| `hledger.exportCurrencySymbol` | `on` | Exported amounts carry a `$`. |
+
 ## Grammar
 
 The grammar below is consistent with the rules above. Each production describes a single line; how lines group into entries is described under [Entries](#entries). Keywords, month names, `dr`/`cr` and tags are case-insensitive.
@@ -247,7 +292,7 @@ month-num      = digit , [ digit ] ;
 day            = digit , [ digit ] ;
 
 (* Directives start at the first column. *)
-directive      = book | open | account-decl | show ;
+directive      = book | open | account-decl | show | set ;
 book           = "book" , ws1 , quoted , [ ws1 , "period" , ws1 , full-date , ".." , full-date ] ;
 open           = "open" , ws1 , account , ws1 , [ side , ws1 ] , amount ;
 account-decl   = "account" , ws1 , quoted , ws1 , type , { ws1 , account-option } ;
@@ -259,6 +304,8 @@ show           = "show" , ws1 , visual , [ { ws } , ":" , { ws } , option , { ",
 visual         = "entry-cards" | "t-accounts" | "equation" | "statement-flow"
                | "cash-flow" | "trial-balance" | "schedule" ;
 option         = account | word ;
+set            = "set" , ws1 , setting-key , ws1 , word ;
+setting-key    = word ;                         (* a key from the Settings table *)
 
 word           = char - ws , { char - ws } ;
 ws             = " " ;                          (* tabs are expanded before parsing *)
@@ -285,6 +332,8 @@ Diagnostics from the book rules (see `diagnose()`):
 | `unknown-account` | error | A posting names an account that is in neither the chart nor its aliases |
 | `single-line-entry` | error | An entry has fewer than two posting lines |
 | `ambiguous-blank` | error | More than one posting in an entry has no amount |
+| `abnormal-balance` | warning | An account's balance has the wrong sign for its type, e.g. negative Cash |
+| `odd-side` | warning | A side is unusual for the account type, e.g. revenue debited outside closing |
 | `zero-amount` | warning | A posting's amount is 0 |
 | `inferred-amount` | hint | A blank amount was filled in; the hint shows the value |
 | `outside-period` | hint | An entry's date falls outside the book's period |
@@ -300,6 +349,7 @@ Diagnostics from the parser itself:
 | `unknown-tag` | warning | A tag isn't one of the five recognized tags |
 | `unknown-visual` | warning | A `show` line names a visual that doesn't exist |
 | `duplicate-book` | warning | A file has more than one `book` line |
+| `unknown-setting` | warning | A `set` line names a setting or value Entrypad doesn't know |
 
 ## hledger and ledger
 

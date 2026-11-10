@@ -141,8 +141,8 @@ function App() {
         <details id="settings">
           <summary>Settings</summary>
           <p className="note">
-            Every default Entrypad uses is listed here. Settings tagged "Not used yet" are stored now and
-            take effect once the parser and editor ship.
+            Every default Entrypad uses is listed here. Settings tagged "Not used yet" are saved now and
+            start working when the parser and editor ship.
           </p>
           <SettingsPanel
             settings={settings}
