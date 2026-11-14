@@ -11,6 +11,10 @@ export type {
   SourceRange,
 } from "./types.js";
 export { editDistance, matchAccount, suggestAccounts } from "./accounts.js";
+export { parse } from "./parse/parse.js";
+export type { ParseOptions, ParseResult, Show } from "./parse/parse.js";
+export { looksLikeAmount, parseAmount } from "./parse/amount.js";
+export type { AmountResult } from "./parse/amount.js";
 export { balances, isBalanced } from "./balances.js";
 export type { AccountBalance, Posting } from "./balances.js";
 export { formatCents, toCents } from "./money.js";

@@ -73,6 +73,8 @@ export interface BookSettings {
 }
 
 export interface Book {
+  /** From the `book` line, e.g. "Sunrise Bakery". */
+  name?: string;
   chart: Account[];
   entries: Entry[];
   period?: { start: string; end: string };

@@ -72,7 +72,7 @@ The date can be written in any of these forms:
 | ISO | `2026-01-03` | |
 | No date | `-` | For entries where the date doesn't matter |
 
-When a date has no year, the year comes from the book's period: the parser uses the year that places the date inside the period. Without a period, it uses the year of the nearest dated entry above. If there is none, it uses the current year.
+When a date has no year, the year comes from the book's period: the parser uses the year that places the date inside the period. Without a period, or when no year puts the date inside it, it uses the year of the nearest dated entry above. Failing that it uses the period's first year, and if there is no period either, the current year. A date that doesn't exist in the year chosen, such as `Feb 29` in 2026, is flagged `invalid-date`.
 
 The memo is the rest of the line after the date. It can be empty.
 
