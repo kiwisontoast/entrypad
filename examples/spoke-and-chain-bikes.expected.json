@@ -1,0 +1,38 @@
+{
+  "book": "Spoke & Chain Bikes",
+  "period": {
+    "start": "2026-03-01",
+    "end": "2026-03-31"
+  },
+  "entries": 18,
+  "balances": {
+    "Cash": "8,079.57",
+    "Accounts Receivable": "1,800.00",
+    "Inventory": "22,285.02",
+    "Equipment": "6,000.00",
+    "Accumulated Depreciation, Equipment": "1,300.00",
+    "Accounts Payable": "7,400.00",
+    "Wages Payable": "520.00",
+    "Unearned Revenue": "1,500.00",
+    "Common Stock": "20,000.00",
+    "Retained Earnings": "10,000.00",
+    "Dividends": "1,000.00",
+    "Sales Revenue": "15,524.97",
+    "Service Revenue": "640.00",
+    "Cost of Goods Sold": "9,314.98",
+    "Wages Expense": "5,720.00",
+    "Rent Expense": "2,200.00",
+    "Utilities Expense": "385.40",
+    "Depreciation Expense": "100.00"
+  },
+  "trialBalance": {
+    "debits": "56,884.97",
+    "credits": "56,884.97"
+  },
+  "equation": {
+    "assets": "36,864.59",
+    "liabilities": "9,420.00",
+    "equity": "27,444.59",
+    "netIncome": "-1,555.41"
+  }
+}

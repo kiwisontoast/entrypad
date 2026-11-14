@@ -11,6 +11,7 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "e2e": "pnpm --filter @entrypad/site e2e"
+    "e2e": "pnpm --filter @entrypad/site e2e",
+    "examples": "node examples/generate.ts"
   }
 }

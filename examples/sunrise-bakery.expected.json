@@ -1,0 +1,40 @@
+{
+  "book": "Sunrise Bakery",
+  "period": {
+    "start": "2026-01-01",
+    "end": "2026-01-31"
+  },
+  "entries": 20,
+  "balances": {
+    "Cash": "24,747.41",
+    "Accounts Receivable": "0.00",
+    "Supplies": "710.00",
+    "Prepaid Insurance": "1,320.00",
+    "Equipment": "12,000.00",
+    "Accumulated Depreciation, Equipment": "200.00",
+    "Accounts Payable": "850.00",
+    "Notes Payable": "6,000.00",
+    "Interest Payable": "30.00",
+    "Utilities Payable": "410.75",
+    "Common Stock": "25,000.00",
+    "Sales Revenue": "17,187.41",
+    "Wages Expense": "6,400.00",
+    "Rent Expense": "1,800.00",
+    "Supplies Expense": "1,640.00",
+    "Insurance Expense": "120.00",
+    "Utilities Expense": "410.75",
+    "Depreciation Expense": "200.00",
+    "Advertising Expense": "300.00",
+    "Interest Expense": "30.00"
+  },
+  "trialBalance": {
+    "debits": "49,678.16",
+    "credits": "49,678.16"
+  },
+  "equation": {
+    "assets": "38,577.41",
+    "liabilities": "7,290.75",
+    "equity": "31,286.66",
+    "netIncome": "6,286.66"
+  }
+}

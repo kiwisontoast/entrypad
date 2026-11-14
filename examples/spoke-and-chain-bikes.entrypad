@@ -1,0 +1,88 @@
+# Spoke & Chain Bikes, March 2026
+# An established bike shop's March: opening balances, inventory bought on account, sales with their cost of goods sold, repairs, a customer deposit and a dividend.
+book "Spoke & Chain Bikes" period 2026-03-01..2026-03-31
+
+open Cash 8,000
+open Inventory 22,000
+open Equipment 6,000
+open Accumulated Depreciation, Equipment 1,200
+open Accounts Payable 4,800
+open Common Stock 20,000
+open Retained Earnings 10,000
+
+Mar 2  Spring stock on account
+  Inventory                9,600
+      Accounts Payable                   9,600
+
+Mar 6  Repairs paid in cash: Cash 640 / Service Revenue 640
+
+Mar 7  Bike sales, first week
+  Cash                    2,177.31
+  Cost of Goods Sold      1,306.39
+      Sales Revenue                     2,177.31
+      Inventory                         1,306.39
+
+Mar 10 Club order on account
+  A/R                        3,800
+  Cost of Goods Sold         2,280
+      Sales Revenue                        3,800
+      Inventory                            2,280
+
+Mar 12 Pay the bike supplier
+  Accounts Payable         7,000
+      Cash                               7,000
+
+Mar 14 Bike sales, second week
+  Cash                    2,873.14
+  Cost of Goods Sold      1,723.88
+      Sales Revenue                     2,873.14
+      Inventory                         1,723.88
+
+Mar 15 Pay March rent: Rent Expense 2,200 / Cash 2,200
+
+Mar 15 Pay wages for the first half
+  Wages Expense         2,600
+      Cash                            2,600
+
+Mar 20 Club pays part of its order
+  Cash                        2,000
+      Accounts Receivable                   2,000
+
+Mar 21 Bike sales, third week
+  Cash                    3,293.14
+  Cost of Goods Sold      1,975.88
+      Sales Revenue                     3,293.14
+      Inventory                         1,975.88
+
+Mar 24 Deposit on a custom build   [operating]
+  Cash                     1,500
+      Unearned Revenue                   1,500
+
+Mar 27 Pay a dividend   [financing]
+  Dividends         1,000
+      Cash                        1,000
+
+Mar 28 Bike sales, fourth week
+  Cash                    3,381.38
+  Cost of Goods Sold      2,028.83
+      Sales Revenue                     3,381.38
+      Inventory                         2,028.83
+
+Mar 31 Pay the electricity bill
+  Utilities Expense        385.40
+      Cash
+
+Mar 31 Pay wages for the second half
+  Wages Expense         2,600
+      Cash                            2,600
+
+Mar 31 Depreciate the workshop tools   [adjusting]
+  Depreciation Expense                          100
+      Accumulated Depreciation, Equipment                     100
+
+Mar 31 Wages earned but not yet paid   [adjusting]
+  Wages Expense           520
+      Wages Payable                     520
+
+show t-accounts: Cash, Inventory, Accounts Receivable, Accounts Payable, Cost of Goods Sold
+show equation

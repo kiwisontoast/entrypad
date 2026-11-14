@@ -1,0 +1,83 @@
+# Sunrise Bakery, January 2026
+# A bakery's first month: the owner's investment, ovens bought half on a note, weekly sales, a catering client and month-end adjustments.
+book "Sunrise Bakery" period 2026-01-01..2026-01-31
+
+Jan 1  Owner invests cash   [financing]
+  Cash                25,000
+      Common Stock                  25,000
+
+Jan 2  Pay January rent: Rent Expense 1,800 / Cash 1,800
+
+Jan 3  Buy ovens, half cash, half note   [investing]
+  Equipment            12,000
+      Cash                            6,000
+      Notes Payable                   6,000
+
+Jan 4  Flour, sugar and boxes on account
+  Supplies         2,350
+      A/P                        2,350
+
+Jan 5  Insure the shop for a year
+  Prepaid Insurance         1,440
+      Cash                                1,440
+
+Jan 7  Counter sales, first week
+  Cash               3,988.45
+      Sales Revenue                3,988.45
+
+Jan 10 Bill a catering order
+  A/R                   1,250
+      Sales Revenue
+
+Jan 14 Counter sales, second week
+  Cash               3,653.54
+      Sales Revenue                3,653.54
+
+Jan 15 Pay wages for the first half
+  Wages Expense         3,200
+      Cash                            3,200
+
+Jan 18 Pay part of the supplier's bill
+  Accounts Payable         1,500
+      Cash                               1,500
+
+Jan 21 Counter sales, third week
+  Cash               3,896.28
+      Sales Revenue                3,896.28
+
+Jan 22 Collect the catering invoice
+  Cash                        1,250
+      Accounts Receivable                   1,250
+
+Jan 25 Flyers for the opening: Advertising Expense 300 / Cash 300
+
+Jan 28 Counter sales, fourth week
+  Cash               4,399.14
+      Sales Revenue                4,399.14
+
+Jan 29 Pay wages for the second half
+  Wages Expense         3,200
+      Cash                            3,200
+
+Jan 31 Supplies used in January   [adjusting]
+  Supplies Expense         1,640
+      Supplies                           1,640
+
+Jan 31 One month of insurance   [adjusting]
+  Insurance Expense           120
+      Prepaid Insurance                     120
+
+Jan 31 Depreciate the ovens   [adjusting]
+  Depreciation Expense                          200
+      Accumulated Depreciation, Equipment                     200
+
+Jan 31 Interest owed on the note   [adjusting]
+  Interest Expense            30
+      Interest Payable                      30
+
+Jan 31 January electricity, billed in February   [adjusting]
+  Utilities Expense        410.75
+      Utilities Payable                  410.75
+
+show t-accounts: Cash, Supplies, Equipment, Accounts Payable, Sales Revenue
+show equation

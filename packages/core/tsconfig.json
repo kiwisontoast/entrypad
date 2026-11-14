@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2022"],
-    "types": ["node"]
+    "types": ["node"],
+    // The golden tests import examples/generate.ts, which Node runs directly.
+    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }
