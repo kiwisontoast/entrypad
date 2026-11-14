@@ -1,3 +1,12 @@
+export { EntryCards, cardId, cardLineId, flipSide } from "./EntryCards.js";
+export type { EntryCardsProps } from "./EntryCards.js";
+export { Equation } from "./Equation.js";
+export type { EquationProps } from "./Equation.js";
+export { HighlightProvider, useHighlight } from "./highlight.js";
+export type { Highlight, HighlightStore } from "./highlight.js";
+export { TAccount, postingId, reclassify, tAccountId } from "./TAccount.js";
+export type { TAccountProps } from "./TAccount.js";
+export type { InteractionProps, VisualProps } from "./visual.js";
 export { PostingBoard } from "./PostingBoard.js";
 export type { BoardValue, DraftCard, PostingBoardProps } from "./PostingBoard.js";
 export { SettingsPanel } from "./SettingsPanel.js";
