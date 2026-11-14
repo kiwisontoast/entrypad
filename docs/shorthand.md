@@ -369,15 +369,17 @@ Entrypad reads and writes the plain-text journal format used by [hledger](https:
 
 ### Import
 
-- Dates in `2026-01-03` or `2026/01/03` form become entry dates. Status marks (`*`, `!`) and codes in parentheses are dropped.
-- A positive amount becomes a debit and a negative amount a credit. A posting with no amount is filled in by the same rule as the shorthand's blank amount.
-- Colon-separated account names are matched to the chart by their last part, so `assets:cash` matches Cash. When that part matches more than one account, or none, the posting is flagged `unknown-account` with suggestions.
-- `;` comments become `#` comments.
-- Directives Entrypad doesn't use, such as `commodity`, `include`, price lines, and automated or periodic transactions, are kept as comments and flagged with an `unsupported-directive` hint.
+The journal is converted to shorthand text, which from then on is the book.
+
+- Dates in `2026-01-03`, `2026/01/03` or `2026.01.03` form become entry dates. Status marks (`*`, `!`), codes in parentheses and secondary dates are dropped.
+- A positive amount becomes a debit and a negative amount a credit. Amounts can be written `$8,000`, `$-4,000`, `-$4,000` or `100 USD`; other commodities are flagged `invalid-amount`. A posting with no amount is filled in by the same rule as the shorthand's blank amount, on whichever side balances the transaction.
+- Colon-separated account names are matched to the chart by their last part, so `assets:cash` matches Cash. When that part matches nothing, the one account of the right type whose name contains it is used, so `liabilities:notes` matches Notes Payable and `expenses:rent` matches Rent Expense. When it matches more than one account, or none, the last part is kept as written and flagged `unknown-account` with suggestions.
+- `;` comments become `#` comments and stay with the transaction they sit in or above. Tags in a transaction's comment that name an Entrypad tag, such as `; adjusting:`, become tags.
+- Directives Entrypad doesn't use, such as `commodity`, `include`, price lines, and automated or periodic transactions, are kept as comments and flagged with an `unsupported-directive` hint. So are balance assertions, prices on postings and virtual postings, which are dropped from the posting.
 
 ### Export
 
-- Each entry is written as a dated hledger transaction. Debits are positive and credits negative, and amounts carry a `$`.
+- Each entry is written as a dated hledger transaction. Debits are positive and credits negative, and amounts carry a `$` and always two decimal places (`$8,000.00`), so a reader can't mistake the comma for a decimal mark. Tags are written as hledger tags, e.g. `; adjusting:`.
 - Accounts are written as `<type>:<name>`, using hledger's top-level names: `assets`, `liabilities`, `equity`, `revenues`, `expenses`. The name is lowercased with spaces kept, e.g. `assets:accounts receivable`.
 - Opening balances are exported as an ordinary entry dated the first day of the period.
 - hledger requires a date on every transaction. An undated entry takes the date of the nearest dated entry above it. If there is none, it takes the period start, and if the book has no period, the date of the export, with a comment noting the substitution.
