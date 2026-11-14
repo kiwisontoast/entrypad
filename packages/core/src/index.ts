@@ -25,6 +25,8 @@ export type { ParseOptions, ParseResult, Show } from "./parse/parse.js";
 export { looksLikeAmount, parseAmount } from "./parse/amount.js";
 export type { AmountResult } from "./parse/amount.js";
 export { balances, isBalanced } from "./balances.js";
+export { equation, ledger } from "./views.js";
+export type { AccountLedger, Equation, LedgerRow } from "./views.js";
 export type { AccountBalance, Posting } from "./balances.js";
 export { formatCents, toCents } from "./money.js";
 export { usGaapIntroChart } from "./charts/usGaapIntro.js";
