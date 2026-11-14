@@ -235,8 +235,18 @@ Jan 9 Pay rent: Rent Expense 1200 / Cash 1200
     const [before, after] = [text.indexOf("Jan 3"), text.indexOf("\n\nJan 9")];
     expect(out.slice(0, before)).toBe(text.slice(0, before));
     expect(out.slice(out.indexOf("\n\nJan 9"))).toBe(text.slice(after));
-    expect(out).toContain("Jan 3  Buy oven   [investing]\n  Equipment             8,000\n      Cash                     4,000\n      Accounts Payable         4,000\n");
+    expect(out).toContain("Jan 3 Buy oven [investing]\n  Equipment             8,000\n      Cash                     4,000\n      Accounts Payable         4,000\n");
     expect(read(out).book.entries[1]!.lines.map((l) => l.account)).toEqual(["equipment", "cash", "accounts-payable"]);
+  });
+
+  it("rewrites the header only when its date, memo or tags change", () => {
+    const src = "Jan 3   Buy oven, finally  [investing]\n  Equipment 8,000\n        Cash 8,000\n";
+    const e1 = read(src).book.entries[0]!;
+    expect(editEntry(src, "e1", e1).split("\n")[0]).toBe("Jan 3   Buy oven, finally  [investing]");
+    expect(editEntry(src, "e1", { ...e1, memo: "Buy oven" }).split("\n")[0]).toBe("Jan 3, 2026 Buy oven   [investing]");
+    const oneLine = "Jan 9 Pay rent: Rent Expense 1200 / Cash 1200\n";
+    const e = read(oneLine).book.entries[0]!;
+    expect(read(editEntry(oneLine, "e1", e)).book.entries[0]!.lines).toHaveLength(2);
   });
 
   it("returns a single change covering the entry, ready for an editor", () => {

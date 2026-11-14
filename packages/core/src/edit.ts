@@ -32,7 +32,9 @@ const isBlankLine = (text: string, from: number) => /^[ \t]*(\r?\n|$)/.test(text
  * The changes that rewrite one entry in the text and touch nothing else, so
  * a drag in a visual never reformats the rest of the user's file.
  *
- * - An entry that exists is replaced in place, within its source range.
+ * - An entry that exists is replaced in place, within its source range. Its
+ *   header line is kept exactly as written if the date, memo and tags are
+ *   unchanged.
  * - `null` deletes the entry, with one blank line after it.
  * - An id that isn't in the text adds the entry at the end.
  * - The opening balances (`open` lines, which can be scattered) are written
@@ -85,7 +87,22 @@ export function entryChanges(
   }
 
   const { from, to } = existing.source;
-  if (entry) return [{ from, to, insert: formatEntry(entry, ctx, nl) }];
+  if (entry) {
+    const formatted = formatEntry(entry, ctx, nl);
+    // Keep the header as the user wrote it when its date, memo and tags are
+    // unchanged, unless it holds postings itself (the one-line form).
+    const nlAt = text.indexOf("\n", from);
+    let headerEnd = nlAt === -1 || nlAt > to ? to : nlAt;
+    if (text[headerEnd - 1] === "\r") headerEnd--;
+    const sameHeader =
+      existing.date === entry.date &&
+      existing.memo === entry.memo &&
+      (existing.tags ?? []).join() === (entry.tags ?? []).join() &&
+      !existing.lines.some((l) => l.source && l.source.line.from < headerEnd);
+    if (!sameHeader) return [{ from, to, insert: formatted }];
+    const body = formatted.indexOf(nl);
+    return [{ from, to, insert: text.slice(from, headerEnd) + (body === -1 ? "" : formatted.slice(body)) }];
+  }
 
   let end = nextLineStart(text, to);
   if (end < text.length && isBlankLine(text, end)) end = nextLineStart(text, end);

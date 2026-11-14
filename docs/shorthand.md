@@ -340,6 +340,8 @@ Diagnostics from the book rules (see `diagnose()`):
 | `inferred-amount` | hint | A blank amount was filled in; the hint shows the value |
 | `outside-period` | hint | An entry's date falls outside the book's period |
 
+An entry with fewer than two lines, or with more than one blank amount, is reported only under its own code, not as unbalanced as well. `odd-side` looks at revenue and expense accounts posted against their normal side, and accepts them in an entry tagged `[closing]`.
+
 Diagnostics from the parser itself:
 
 | Code | Severity | Raised when |
