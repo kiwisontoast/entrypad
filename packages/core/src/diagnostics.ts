@@ -1,5 +1,36 @@
+import type { Book, SourceRange } from "./types.js";
+
 /** How loudly a finding is shown. "off" turns the rule off entirely. */
 export type Severity = "error" | "warning" | "hint" | "off";
+
+/** A suggested change. Applying it returns a new book; the old one is untouched. */
+export interface DiagnosticFix {
+  label: string;
+  apply: (book: Book) => Book;
+}
+
+/**
+ * One finding: a squiggle in the editor and on the visuals. Findings never
+ * change the book and never block anything.
+ */
+export interface Diagnostic {
+  severity: Exclude<Severity, "off">;
+  /** One of the diagnostic codes below, or a code added by a pack. */
+  code: string;
+  /** Shown to the user, e.g. "Debits ($5,000) don't equal credits ($4,500)". */
+  message: string;
+  target: {
+    /** Entry id. */
+    entry?: string;
+    /** Index of the line within the entry. */
+    line?: number;
+    /** Account id, or the name as written for an unknown account. */
+    account?: string;
+    /** The text to underline. */
+    source?: SourceRange;
+  };
+  fixes?: DiagnosticFix[];
+}
 
 /**
  * Every finding Entrypad can report, with its default severity. Book rules

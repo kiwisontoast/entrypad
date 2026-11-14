@@ -18,17 +18,42 @@ export interface Account {
 }
 
 export interface Line {
+  /**
+   * The account's id when the name matched the chart; otherwise the name as
+   * written, which diagnostics flag as an unknown account.
+   */
   account: string;
   side: Side;
   /** Integer cents. */
   amount: number;
+  /**
+   * True when no amount was written. If `inferred` is also true, `amount` is
+   * the value filled in to balance the entry; otherwise it is 0.
+   */
+  blank?: boolean;
+  /** True when `amount` was filled in to balance the entry. */
+  inferred?: boolean;
+  source?: LineSource;
 }
 
 export type EntryTag = "adjusting" | "closing" | "operating" | "investing" | "financing";
 
+/** Character offsets into the shorthand text, `from` inclusive and `to` exclusive. */
 export interface SourceRange {
   from: number;
   to: number;
+}
+
+/**
+ * Where a line came from, with the account name and the amount kept apart so
+ * a squiggle can underline either one.
+ */
+export interface LineSource {
+  /** The whole posting, without leading indentation or trailing spaces. */
+  line: SourceRange;
+  account: SourceRange;
+  /** Absent when the amount was left blank. */
+  amount?: SourceRange;
 }
 
 export interface Entry {

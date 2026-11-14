@@ -6,15 +6,17 @@ export type {
   Entry,
   EntryTag,
   Line,
+  LineSource,
   Side,
   SourceRange,
 } from "./types.js";
+export { editDistance, matchAccount, suggestAccounts } from "./accounts.js";
 export { balances, isBalanced } from "./balances.js";
 export type { AccountBalance, Posting } from "./balances.js";
 export { formatCents, toCents } from "./money.js";
 export { usGaapIntroChart } from "./charts/usGaapIntro.js";
 export { diagnosticCodes, diagnosticDefaults, diagnosticLabels } from "./diagnostics.js";
-export type { DiagnosticCode, Severity } from "./diagnostics.js";
+export type { Diagnostic, DiagnosticCode, DiagnosticFix, Severity } from "./diagnostics.js";
 export {
   defaultSettings,
   fileSettingLines,
