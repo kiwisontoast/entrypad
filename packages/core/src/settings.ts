@@ -67,7 +67,7 @@ export interface EntrypadSettings {
   display: {
     /** Draw squiggles in the editor. */
     showDiagnostics: boolean;
-    /** Draw the unchanging parts of a visual as memoized components (faster drags). */
+    /** Draw the unchanging parts of a visual as memoised components (faster drags). */
     staticPartsAsComponents: boolean;
     /** Make each drag follow one finger and abandon drags the browser cancels. */
     singlePointerDrags: boolean;

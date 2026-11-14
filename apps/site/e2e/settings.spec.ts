@@ -36,7 +36,7 @@ test.describe("settings", () => {
     await expect(row(page, "parsing.tabWidth")).toBeVisible();
   });
 
-  test("squiggles can be hidden, recolored or switched off per check", async ({ page }) => {
+  test("squiggles can be hidden, recoloured or switched off per check", async ({ page }) => {
     await overdraw(page);
     const squiggle = page.locator("#dx-abnormal-cash");
     await expect(squiggle).toHaveAttribute("stroke", "#b26a00"); // warning by default

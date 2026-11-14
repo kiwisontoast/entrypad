@@ -62,6 +62,6 @@ The repo is a pnpm workspace. `packages/core` holds the book model and has no Re
 
 Entrypad builds its drag interactions on [Dragology](https://github.com/declarative-dragging/dragology), the declarative dragging library by Josh Horowitz and Andrew Blinn. Their project site, [Declarative Dragging](https://declarative-dragging.github.io/), inspired this one.
 
-## License
+## Licence
 
 MIT. Copyright (c) 2026 Dev Shroff. See [LICENSE](LICENSE).

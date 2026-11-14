@@ -35,7 +35,7 @@ export interface PostingBoardProps extends BoardValue {
   /** Width available for the visual, used to pick a column count. */
   maxWidth?: number;
   /**
-   * Draw the static parts of each T-account as memoized React components,
+   * Draw the static parts of each T-account as memoised React components,
    * which Dragology neither walks nor blends per frame. On by default; off
    * draws them as plain SVG, for comparison.
    */

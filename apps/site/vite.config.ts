@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 const root = import.meta.dirname;
 
 // ENTRYPAD_PROFILE=1 builds against React's profiling bundle so the spike's
-// <Profiler> reports real render times from optimized code. The e2e perf
+// <Profiler> reports real render times from optimised code. The e2e perf
 // tests use it; normal builds don't.
 const profile = process.env.ENTRYPAD_PROFILE === "1";
 

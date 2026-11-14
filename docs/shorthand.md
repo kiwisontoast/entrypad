@@ -2,7 +2,7 @@
 
 Status: draft. This describes the format the Phase 1 parser will read. Details may change before the first release.
 
-An Entrypad book is a plain-text file with the `.entrypad` extension. It is laid out like a general journal on paper: a date and a memo, the debit lines, then the credit lines indented beneath them. Anyone who can journalize can write it with very little to learn.
+An Entrypad book is a plain-text file with the `.entrypad` extension. It is laid out like a general journal on paper: a date and a memo, the debit lines, then the credit lines indented beneath them. Anyone who can journalise can write it with very little to learn.
 
 The text is the single source of truth. Spreadsheet rows pasted into the editor and imported hledger journals are converted to this format, and every visual is drawn from it.
 
@@ -41,7 +41,7 @@ The Jan 15 entry leaves the Service Revenue amount blank, so Entrypad fills in 3
 
 The parser reads the file one line at a time. Every line is one of these:
 
-| Line | How it is recognized |
+| Line | How it is recognised |
 | --- | --- |
 | Blank | Nothing but spaces or tabs |
 | Comment | First non-space character is `#` or `;` |
@@ -76,7 +76,7 @@ When a date has no year, the year comes from the book's period: the parser uses 
 
 The memo is the rest of the line after the date. It can be empty.
 
-Tags go at the end of the header line in square brackets. You can write one tag per bracket pair (`[adjusting] [operating]`) or several separated by commas (`[adjusting, operating]`). The recognized tags are `adjusting`, `closing`, `operating`, `investing` and `financing`, matched without regard to case.
+Tags go at the end of the header line in square brackets. You can write one tag per bracket pair (`[adjusting] [operating]`) or several separated by commas (`[adjusting, operating]`). The recognised tags are `adjusting`, `closing`, `operating`, `investing` and `financing`, matched without regard to case.
 
 An entry ends at the next blank line, entry header or directive, or at the end of the file. Comment lines inside an entry don't end it.
 
@@ -114,7 +114,7 @@ cr Notes Payable 4,000
 
 - Commas group thousands, and a period marks the decimal point. At most two decimal places are allowed.
 - A `$` before the number and a `k` or `K` after it are optional. A `k` amount still allows at most two decimal places after the multiplication.
-- Amounts are always positive. The side comes from indentation or `dr`/`cr`, never from a sign. A negative or parenthesized amount, such as `-500` or `(500)`, is read as 500 on the side the line already has, and the line is flagged.
+- Amounts are always positive. The side comes from indentation or `dr`/`cr`, never from a sign. A negative or parenthesised amount, such as `-500` or `(500)`, is read as 500 on the side the line already has, and the line is flagged.
 - Entrypad stores every amount as an integer number of cents, so totals never pick up rounding errors.
 
 ### Leaving one amount blank
@@ -213,7 +213,7 @@ A `set` line in the file overrides your own settings for that book. When you sav
 
 ## Settings
 
-Every rule on this page that involves a choice has a setting, and the default is the behavior described above. You can change any of them in the editor's settings, or for one book with a `set` line.
+Every rule on this page that involves a choice has a setting, and the default is the behaviour described above. You can change any of them in the editor's settings, or for one book with a `set` line.
 
 | Setting | Default | What it controls |
 | --- | --- | --- |
@@ -346,7 +346,7 @@ Diagnostics from the parser itself:
 | `invalid-amount` | error | An amount has more than two decimal places or misplaced commas |
 | `invalid-date` | error | A date doesn't exist (`Feb 30`) or can't be read |
 | `negative-amount` | warning | An amount is written as negative or in parentheses |
-| `unknown-tag` | warning | A tag isn't one of the five recognized tags |
+| `unknown-tag` | warning | A tag isn't one of the five recognised tags |
 | `unknown-visual` | warning | A `show` line names a visual that doesn't exist |
 | `duplicate-book` | warning | A file has more than one `book` line |
 | `unknown-setting` | warning | A `set` line names a setting or value Entrypad doesn't know |

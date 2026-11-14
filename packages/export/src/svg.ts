@@ -127,12 +127,12 @@ function exportClone(svg: SVGSVGElement, options: SerializeSvgOptions): SVGSVGEl
   return clone;
 }
 
-/** Wraps serialized SVG text in a Blob with the right media type. */
+/** Wraps serialised SVG text in a Blob with the right media type. */
 export function svgBlob(svgText: string): Blob {
   return new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
 }
 
-/** A data: URL for serialized SVG text, e.g. for an <img> preview. */
+/** A data: URL for serialised SVG text, e.g. for an <img> preview. */
 export function svgDataUrl(svgText: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
 }

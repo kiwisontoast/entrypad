@@ -9,7 +9,7 @@ export const DRAG_HANDLE_ATTR = "data-entrypad-drag";
  * a finger anywhere on a visual can't scroll the page, and a visual taller
  * than the screen traps the reader.
  *
- * Browsers only honor touch-action on the <svg> itself, not on the shapes
+ * Browsers only honour touch-action on the <svg> itself, not on the shapes
  * inside it, so this works in two steps instead:
  * 1. A stylesheet lets the <svg> scroll and zoom like the rest of the page.
  * 2. A touch that starts on a drag handle cancels that scroll from a
