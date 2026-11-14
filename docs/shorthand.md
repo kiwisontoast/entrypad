@@ -187,6 +187,8 @@ This adds an account to the chart. The name is in quotes, followed by its type: 
 
 Without `contra` or `normal`, assets and expenses have a normal debit balance and the other types a normal credit balance. An `account` line can come anywhere in the file, and postings above it can use the account.
 
+Declaring an account whose name is already in the chart replaces that account's type and options rather than adding a second one, so `account "Cash" asset alias "Bank"` lets `Bank` reach Cash. A `contra` account that isn't in the chart is flagged `unknown-account`.
+
 ### `show`
 
 ```

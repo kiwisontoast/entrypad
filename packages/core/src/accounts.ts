@@ -58,6 +58,9 @@ function indexFor(chart: readonly Account[], s: EntrypadSettings["accounts"]): M
  * Finds the account a posting names, following the `accounts.*` settings.
  * A full name wins over an alias, and an alias over an id. Returns undefined
  * when nothing matches.
+ *
+ * The lookup index is cached per chart array, so treat a chart as immutable:
+ * build a new array to change it.
  */
 export function matchAccount(
   name: string,
