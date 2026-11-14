@@ -11,7 +11,11 @@ export type {
   SourceRange,
 } from "./types.js";
 export { editDistance, matchAccount, suggestAccounts } from "./accounts.js";
-export { parse } from "./parse/parse.js";
+export { entryTags, OPENING_ENTRY_ID, parse, visuals } from "./parse/parse.js";
+export { format, formatAmount, formatDate, formatEntry, formatOpening, formatShow, quoteName } from "./format.js";
+export type { EntryContext, FormatOptions } from "./format.js";
+export { applyChanges, editEntry, entryChanges } from "./edit.js";
+export type { TextChange } from "./edit.js";
 export type { ParseOptions, ParseResult, Show } from "./parse/parse.js";
 export { looksLikeAmount, parseAmount } from "./parse/amount.js";
 export type { AmountResult } from "./parse/amount.js";
