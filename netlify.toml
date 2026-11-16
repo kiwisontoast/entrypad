@@ -1,8 +1,13 @@
 [build]
   # The site bundles the workspace packages from source, so only it needs building.
-  # Development pages (/spike/, /fonts/, /visuals/, /editor/) are left out of this build.
+  # Development pages (/dev/, /spike/, /fonts/, /visuals/, /editor/) are left out of this build.
   command = "pnpm --filter @entrypad/site build"
   publish = "apps/site/dist"
 
 [build.environment]
   NODE_VERSION = "24"
+
+# The dev branch is the test site: the same build with the development pages
+# included, at dev--entrypad.netlify.app. Production is unaffected.
+[context.dev.environment]
+  ENTRYPAD_INTERNAL = "1"

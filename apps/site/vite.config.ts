@@ -28,6 +28,7 @@ export default defineConfig({
           spike: resolve(root, "spike/index.html"),
           fonts: resolve(root, "fonts/index.html"),
           visuals: resolve(root, "visuals/index.html"),
+          dev: resolve(root, "dev/index.html"),
           // Internal until Phase 2; ask the owner before making it public.
           editor: resolve(root, "editor/index.html"),
         }),
