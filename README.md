@@ -50,13 +50,23 @@ pnpm test        # unit tests
 pnpm typecheck   # TypeScript checks across every package
 pnpm build       # build the packages and the site
 pnpm e2e         # browser tests
+pnpm examples    # regenerate the sample books in examples/
 ```
 
 Before the first `pnpm e2e`, install the test browser once with `pnpm --filter @entrypad/site exec playwright install chromium`.
 
-`pnpm dev` also serves two development pages that aren't part of the published site: `/spike/`, a prototype of dragging entries onto T-accounts, and `/fonts/`, a typeface comparison. To try them on a phone, run `pnpm --filter @entrypad/site dev:phone` and open the network address it prints on a phone on the same Wi-Fi.
+`pnpm dev` also serves four development pages that aren't part of the published site:
 
-The repo is a pnpm workspace. `packages/core` holds the book model and has no React dependency. `packages/react` holds the visuals, `packages/export` handles exporting them (SVG first, with PNG and GIF to follow), and `apps/site` is the website.
+- `/editor/`, the shorthand editor. Type entries on the left and the T-accounts, entry cards and accounting equation update on the right, with mistakes underlined as you type. Dragging in a visual rewrites the matching entry in the text.
+- `/visuals/`, the same three visuals on a sample book, with step-through.
+- `/spike/`, the original prototype of dragging entries onto T-accounts.
+- `/fonts/`, a typeface comparison.
+
+To try them on a phone, run `pnpm --filter @entrypad/site dev:phone` and open the network address it prints on a phone on the same Wi-Fi.
+
+`examples/` holds three sample books for invented businesses: a bakery, a bike shop and a consulting firm, one month each. Each has an `.expected.json` with its balances, trial balance totals and accounting equation. `examples/generate.ts` works those figures out with plain arithmetic and none of Entrypad's code, and the tests check Entrypad against them. Run `pnpm examples` to regenerate the books.
+
+The repo is a pnpm workspace. `packages/core` has no React dependency. It holds the book model, the shorthand parser, the checks behind the underlines, hledger import and export, and the ledger and equation views. `packages/react` holds the visuals, `packages/export` handles exporting them (SVG first, with PNG and GIF to follow), and `apps/site` is the website.
 
 ## Credits
 
