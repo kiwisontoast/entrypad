@@ -1,16 +1,23 @@
 import { diagnose, parse } from "@entrypad/core";
 import type { Book } from "@entrypad/core";
 import { EntryCards, Equation, HighlightProvider, TAccount } from "@entrypad/react";
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { Profiler, StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import bakery from "../../../../examples/sunrise-bakery.entrypad?raw";
+import { createPerf } from "../spike/perf.js";
+import { thirtyAccounts } from "../spike/sample.js";
 import "../typography.js";
 import "./visuals.css";
 
-/** A development page for the Phase 1 visuals, with the bakery sample book. */
+/**
+ * A development page for the Phase 1 visuals, with the bakery sample book.
+ * `?accounts=30` draws the same 30 T-accounts as the spike, for the perf tests.
+ */
 
 const params = new URLSearchParams(location.search);
 const initial = (): Book => parse(bakery).book;
+const accounts = params.get("accounts") === "30" ? thirtyAccounts : undefined;
+const perf = createPerf();
 
 declare global {
   interface Window {
@@ -18,6 +25,8 @@ declare global {
       book: () => Book;
       setBook: (book: Book) => void;
       at: () => number | undefined;
+      status: () => "idle" | "dragging";
+      perf: typeof perf.log;
     };
   }
 }
@@ -34,7 +43,7 @@ function App() {
   useEffect(() => {
     const onResize = () => setWidth(Math.min(window.innerWidth, 1240));
     window.addEventListener("resize", onResize);
-    window.__visuals = { book: () => bookRef.current, setBook, at: () => atRef.current };
+    window.__visuals = { book: () => bookRef.current, setBook, at: () => atRef.current, status: () => perf.status, perf: perf.log };
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
@@ -71,7 +80,18 @@ function App() {
           <Equation book={book} {...(at !== undefined && { at })} showDiagnostics maxWidth={width} />
         </section>
         <section id="t-accounts">
-          <TAccount book={book} onBookChange={setBook} {...(at !== undefined && { at })} showDiagnostics diagnostics={diagnostics} maxWidth={width} />
+          <Profiler id="t-accounts" onRender={(_id, _phase, actual) => perf.onCommit(actual)}>
+            <TAccount
+              book={book}
+              onBookChange={setBook}
+              {...(at !== undefined && { at })}
+              {...(accounts && { accounts })}
+              showDiagnostics
+              diagnostics={diagnostics}
+              maxWidth={width}
+              onDragStatus={perf.onStatus}
+            />
+          </Profiler>
         </section>
         <section id="cards">
           <EntryCards book={book} onBookChange={setBook} {...(at !== undefined && { at })} showDiagnostics diagnostics={diagnostics} maxWidth={width} />

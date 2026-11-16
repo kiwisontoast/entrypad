@@ -114,6 +114,60 @@ test.describe("drag performance", () => {
     });
   }
 
+  // The Phase 1 TAccount component on the same 30 accounts, dragging a
+  // posted amount across every T-account and away again.
+  for (const cpu of full ? [1, 4] : [1]) {
+    test(`TAccount drag, 30 accounts, ${cpu}x CPU slowdown`, async ({ page }, testInfo) => {
+      test.setTimeout(240_000);
+      await page.goto("/visuals/?accounts=30");
+      await page.locator("#t-accounts svg").waitFor();
+      await page.waitForFunction(() => window.__visuals !== undefined);
+      const ids = await page
+        .locator('#t-accounts svg [id^="t-"]')
+        .evaluateAll((els) => els.map((e) => e.id).filter((id) => id !== "t-diagnostics"));
+      expect(ids.length).toBe(30);
+      const path: Point[] = [];
+      for (const id of ids) path.push(await center(page.locator(`#${id}`)));
+      const box = (await page.locator("#t-accounts svg").boundingBox())!;
+      const from = await center(page.locator("#p-e2-0"));
+
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpu });
+      await page.mouse.move(from.x, from.y);
+      await page.mouse.down();
+      await page.mouse.move(from.x + 8, from.y + 8, { steps: 2 });
+      for (const p of path) await page.mouse.move(p.x, p.y, { steps: 4 });
+      // Well below the grid, far from every account, so the drop changes nothing.
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height + 160, { steps: 6 });
+      await page.mouse.up();
+      await page.waitForTimeout(800);
+      await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+
+      const log = await page.evaluate(() => window.__visuals.perf);
+      const row = {
+        component: "TAccount",
+        accounts: 30,
+        cpu,
+        moveHandler: stats(log.events.filter((e) => e.type === "pointermove").map((e) => e.ms)),
+        reactCommit: stats(log.commits),
+        frameInterval: stats(log.frames),
+        framesOver33ms: log.frames.filter((f) => f > 33.4).length,
+        longFrames: { n: log.longFrames.length, totalMs: Math.round(log.longFrames.reduce((s, f) => s + f.duration, 0)) },
+        dragged: log.statuses.includes("dragging"),
+        idleAfter: (await page.evaluate(() => window.__visuals.status())) === "idle",
+        rentStill: await page.evaluate(() => window.__visuals.book().entries[1]!.lines[0]!.account),
+      };
+      results.push(row);
+      console.log(`[perf] ${JSON.stringify(row)}`);
+      await testInfo.attach("perf.json", { body: JSON.stringify(row, null, 2), contentType: "application/json" });
+
+      expect(row.dragged).toBe(true);
+      expect(row.idleAfter).toBe(true);
+      expect(row.rentStill).toBe("rent-expense");
+      if (cpu === 1) expect(row.reactCommit.p50).toBeLessThan(16);
+    });
+  }
+
   test.afterAll(() => {
     if (!results.length) return;
     mkdirSync("test-results", { recursive: true });
