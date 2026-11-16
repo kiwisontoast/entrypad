@@ -1,6 +1,6 @@
 [build]
   # The site bundles the workspace packages from source, so only it needs building.
-  # Development pages (/spike/, /fonts/, /visuals/) are left out of this build.
+  # Development pages (/spike/, /fonts/, /visuals/, /editor/) are left out of this build.
   command = "pnpm --filter @entrypad/site build"
   publish = "apps/site/dist"
 

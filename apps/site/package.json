@@ -12,12 +12,18 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/language": "6.13.1",
+    "@codemirror/lint": "6.9.7",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.15",
     "@entrypad/core": "workspace:*",
     "@entrypad/export": "workspace:*",
     "@entrypad/react": "workspace:*",
     "@fontsource/source-code-pro": "5.3.1",
     "@fontsource/source-sans-3": "5.3.1",
     "@fontsource/spectral": "5.3.0",
+    "@lezer/highlight": "1.2.5",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

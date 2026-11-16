@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { usGaapIntroChart } from "./charts/usGaapIntro.js";
-import { editEntry, entryChanges } from "./edit.js";
+import { applyChanges, bookChanges, editEntry, entryChanges } from "./edit.js";
 import { format, formatAmount, quoteName } from "./format.js";
 import { accountId, parse } from "./parse/parse.js";
 import { defaultSettings, setSetting } from "./settings.js";
@@ -210,6 +210,36 @@ describe("parse after format", () => {
   it("is stable for the spec's example", () => {
     const once = format(read(bakery).book);
     expect(format(read(once).book)).toBe(once);
+  });
+});
+
+describe("bookChanges", () => {
+  const text = "# notes\nJan 1 a\n  Cash 100\n    Common Stock 100\n\nJan 2 b\n  Supplies 50\n    Cash 50\n";
+
+  it("rewrites only the entries a change touched", () => {
+    const before = read(text).book;
+    const after = { ...before, entries: before.entries.map((e) => (e.id === "e2" ? { ...e, lines: e.lines.map((l, i) => (i === 0 ? { ...l, account: "supplies-expense" } : l)) } : e)) };
+    const changes = bookChanges(text, before, after);
+    expect(changes).toHaveLength(1);
+    const out = applyChanges(text, changes);
+    expect(out.startsWith("# notes\nJan 1 a\n  Cash 100\n    Common Stock 100\n\nJan 2 b\n")).toBe(true);
+    expect(read(out).book.entries[1]!.lines[0]!.account).toBe("supplies-expense");
+  });
+
+  it("returns nothing when only source ranges or filled-in amounts differ", () => {
+    const src = "Jan 1 a\n  Cash 100\n    Common Stock\n";
+    const before = read(src).book;
+    const after = { ...before, entries: before.entries.map((e) => ({ ...e, source: { from: 0, to: 1 }, lines: e.lines.map((l) => ({ ...l, amount: l.blank ? 999 : l.amount })) })) };
+    expect(bookChanges(src, before, after)).toEqual([]);
+  });
+
+  it("adds new entries and removes deleted ones", () => {
+    const before = read(text).book;
+    const added: Entry = { id: "new", date: "2026-01-03", memo: "c", lines: [{ account: "cash", side: "dr", amount: 1 }, { account: "common-stock", side: "cr", amount: 1 }] };
+    const after = { ...before, entries: [before.entries[1]!, added] };
+    const out = applyChanges(text, bookChanges(text, before, after));
+    expect(read(out).book.entries.map((e) => e.memo)).toEqual(["b", "c"]);
+    expect(out.startsWith("# notes\nJan 2 b\n")).toBe(true);
   });
 });
 

@@ -14,7 +14,7 @@ export { editDistance, matchAccount, suggestAccounts } from "./accounts.js";
 export { entryTags, OPENING_ENTRY_ID, parse, visuals } from "./parse/parse.js";
 export { format, formatAmount, formatDate, formatEntry, formatOpening, formatShow, quoteName } from "./format.js";
 export type { EntryContext, FormatOptions } from "./format.js";
-export { applyChanges, editEntry, entryChanges } from "./edit.js";
+export { applyChanges, bookChanges, editEntry, entryChanges } from "./edit.js";
 export { bookRules, diagnose } from "./diagnose.js";
 export { exportHledger, importHledger, matchHledgerAccount } from "./hledger.js";
 export type { HledgerImport, HledgerOptions } from "./hledger.js";

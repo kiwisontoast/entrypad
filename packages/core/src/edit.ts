@@ -4,7 +4,7 @@ import { OPENING_ENTRY_ID, parse } from "./parse/parse.js";
 import type { ParseOptions } from "./parse/parse.js";
 import { defaultSettings } from "./settings.js";
 import type { EntrypadSettings } from "./settings.js";
-import type { Entry } from "./types.js";
+import type { Book, Entry } from "./types.js";
 
 /** Replace `text.slice(from, to)` with `insert`. The same shape CodeMirror uses. */
 export interface TextChange {
@@ -107,6 +107,46 @@ export function entryChanges(
   let end = nextLineStart(text, to);
   if (end < text.length && isBlankLine(text, end)) end = nextLineStart(text, end);
   return [{ from: lineStart(text, from), to: end, insert: "" }];
+}
+
+/** An entry's meaning, without where it came from in the text. */
+function meaning(entry: Entry): string {
+  return JSON.stringify({
+    date: entry.date,
+    memo: entry.memo,
+    tags: entry.tags,
+    lines: entry.lines.map((l) => ({
+      account: l.account,
+      side: l.side,
+      // A blank amount is rewritten blank, so its filled-in value doesn't count.
+      amount: l.blank ? null : l.amount,
+    })),
+  });
+}
+
+/**
+ * The changes that turn the text for `before` into text for `after`,
+ * touching only the entries that differ. A visual reports a drag as a new
+ * book; this is how the editor writes it back. Entries are matched by id.
+ */
+export function bookChanges(
+  text: string,
+  before: Book,
+  after: Book,
+  settings: EntrypadSettings = defaultSettings(),
+  options: ParseOptions = {},
+): TextChange[] {
+  const old = new Map(before.entries.map((e) => [e.id, e]));
+  const kept = new Set(after.entries.map((e) => e.id));
+  const changes: TextChange[] = [];
+  for (const entry of after.entries) {
+    const was = old.get(entry.id);
+    if (!was || meaning(was) !== meaning(entry)) changes.push(...entryChanges(text, entry.id, entry, settings, options));
+  }
+  for (const entry of before.entries) {
+    if (!kept.has(entry.id)) changes.push(...entryChanges(text, entry.id, null, settings, options));
+  }
+  return changes;
 }
 
 /** Returns the text with one entry rewritten, added or deleted. See `entryChanges`. */
