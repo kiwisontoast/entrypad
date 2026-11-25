@@ -18,6 +18,9 @@ const params = new URLSearchParams(location.search);
 const initial = (): Book => parse(bakery).book;
 const accounts = params.get("accounts") === "30" ? thirtyAccounts : undefined;
 const perf = createPerf();
+const countRender = () => {
+  if (window.__visuals) window.__visuals.renders++;
+};
 
 declare global {
   interface Window {
@@ -27,6 +30,8 @@ declare global {
       at: () => number | undefined;
       status: () => "idle" | "dragging";
       perf: typeof perf.log;
+      /** How many states the T-accounts have drawn, previews included. */
+      renders: number;
     };
   }
 }
@@ -43,7 +48,7 @@ function App() {
   useEffect(() => {
     const onResize = () => setWidth(Math.min(window.innerWidth, 1240));
     window.addEventListener("resize", onResize);
-    window.__visuals = { book: () => bookRef.current, setBook, at: () => atRef.current, status: () => perf.status, perf: perf.log };
+    window.__visuals = { book: () => bookRef.current, setBook, at: () => atRef.current, status: () => perf.status, perf: perf.log, renders: 0 };
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
@@ -90,6 +95,7 @@ function App() {
               diagnostics={diagnostics}
               maxWidth={width}
               onDragStatus={perf.onStatus}
+              onRenderState={countRender}
             />
           </Profiler>
         </section>

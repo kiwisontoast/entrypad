@@ -1,4 +1,5 @@
 import { usGaapIntroChart } from "./charts/usGaapIntro.js";
+import { groupThousands } from "./money.js";
 import { looksLikeAmount } from "./parse/amount.js";
 import { inferYear } from "./parse/date.js";
 import { OPENING_ENTRY_ID } from "./parse/parse.js";
@@ -33,7 +34,7 @@ const CREDIT_INDENT = "      ";
 /** Writes integer cents exactly: 1,200 or 1,200.50. */
 export function formatAmount(cents: number): string {
   const abs = Math.abs(cents);
-  const whole = Math.floor(abs / 100).toLocaleString("en-US");
+  const whole = groupThousands(Math.floor(abs / 100));
   const frac = abs % 100;
   return (cents < 0 ? "-" : "") + (frac ? `${whole}.${String(frac).padStart(2, "0")}` : whole);
 }

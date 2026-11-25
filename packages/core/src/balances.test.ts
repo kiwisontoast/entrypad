@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { balances, isBalanced } from "./balances.js";
-import { formatCents, toCents } from "./money.js";
+import { formatCents, groupThousands, toCents } from "./money.js";
 import type { Book } from "./types.js";
 
 const book: Book = {
@@ -80,5 +80,13 @@ describe("money", () => {
     expect(formatCents(120_000)).toBe("1,200");
     expect(formatCents(120_050, 2)).toBe("1,200.50");
     expect(formatCents(-45_000)).toBe("(450)");
+  });
+
+  it("groups thousands the way en-US does, at every length", () => {
+    for (const n of [0, 7, 99, 999, 1_000, 12_345, 999_999, 1_000_000, 123_456_789, 9_007_199_254_740]) {
+      expect(groupThousands(n)).toBe(n.toLocaleString("en-US"));
+    }
+    expect(formatCents(99_999_950)).toBe("1,000,000");
+    expect(formatCents(-123_456_789, 2)).toBe("(1,234,567.89)");
   });
 });

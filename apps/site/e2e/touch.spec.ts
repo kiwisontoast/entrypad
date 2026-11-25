@@ -164,6 +164,111 @@ test.describe("touch", () => {
     });
   });
 
+  test.describe("the Phase 1 visuals", () => {
+    const openVisuals = async (page: Page) => {
+      await page.goto("/visuals/");
+      await page.locator("#t-accounts svg").waitFor();
+      await page.waitForFunction(() => window.__visuals !== undefined);
+    };
+    const line = (page: Page, entry: string, index: number) =>
+      page.evaluate(([e, i]) => window.__visuals.book().entries.find((x) => x.id === e)?.lines[i], [entry, index] as const);
+    /** Scrolls so an element sits near the top of the viewport. */
+    const bringUp = async (page: Page, selector: string) => {
+      const box = (await page.locator(selector).boundingBox())!;
+      await page.evaluate((y) => window.scrollBy(0, y), box.y - 80);
+      await page.waitForTimeout(100);
+    };
+
+    test("a finger drag reclassifies a T-account amount", async ({ page }) => {
+      await openVisuals(page);
+      await recordPointerTypes(page);
+      const finger = await Finger.on(page);
+      const from = await center(page.locator("#p-e2-0"));
+      const to = await center(page.locator("#t-prepaid-insurance"));
+      await finger.down(from);
+      await finger.glide(from, to);
+      await finger.up();
+      expect(await pointerTypes(page)).toEqual(["touch"]);
+      await expect.poll(() => line(page, "e2", 0).then((l) => l?.account)).toBe("prepaid-insurance");
+    });
+
+    test("a finger drag up a T-account amount raises it", async ({ page }) => {
+      await openVisuals(page);
+      const finger = await Finger.on(page);
+      const from = await center(page.locator("#p-e2-0"));
+      await finger.down(from);
+      await finger.glide(from, { x: from.x, y: from.y - 30 }, 10);
+      await finger.up();
+      await expect.poll(() => line(page, "e2", 0).then((l) => l?.amount)).toBeGreaterThan(180_000);
+      expect((await line(page, "e2", 1))!.amount).toBe((await line(page, "e2", 0))!.amount);
+    });
+
+    test("a cancelled touch on a T-account amount leaves the books alone", async ({ page }) => {
+      await openVisuals(page);
+      const finger = await Finger.on(page);
+      const from = await center(page.locator("#p-e2-0"));
+      const to = await center(page.locator("#t-prepaid-insurance"));
+      await finger.down(from);
+      await finger.glide(from, to);
+      expect(await page.evaluate(() => window.__visuals.status())).toBe("dragging");
+      await finger.cancel();
+      await expect.poll(() => page.evaluate(() => window.__visuals.status())).toBe("idle");
+      expect((await line(page, "e2", 0))!.account).toBe("rent-expense");
+    });
+
+    test("a finger drag flips an entry card line to the other side", async ({ page }) => {
+      await openVisuals(page);
+      await bringUp(page, "#cl-e1-1");
+      const finger = await Finger.on(page);
+      const credit = page.locator("#cl-e1-1");
+      await waitForSettled(credit);
+      const c = await center(credit);
+      const from = { x: c.x + 100, y: c.y };
+      await finger.down(from);
+      await finger.glide(from, { x: c.x - 60, y: c.y });
+      await finger.up();
+      await expect.poll(() => line(page, "e1", 1).then((l) => l?.side)).toBe("dr");
+    });
+
+    test.describe("on a phone", () => {
+      test.use({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true });
+
+      test("every visual fits the screen's width", async ({ page }) => {
+        await openVisuals(page);
+        for (const id of ["#equation", "#t-accounts", "#cards"]) {
+          const box = (await page.locator(`${id} svg`).first().boundingBox())!;
+          expect(box.x).toBeGreaterThanOrEqual(0);
+          expect(box.x + box.width).toBeLessThanOrEqual(391);
+        }
+      });
+
+      test("a finger on the equation scrolls the page", async ({ page }) => {
+        await openVisuals(page);
+        const finger = await Finger.on(page);
+        const box = (await page.locator("#equation svg").boundingBox())!;
+        const start = { x: box.x + box.width / 2, y: Math.min(box.y + box.height / 2, 700) };
+        await finger.down(start);
+        await finger.glide(start, { x: start.x, y: start.y - 300 }, 10);
+        await finger.up();
+        await page.waitForTimeout(400);
+        expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(150);
+      });
+
+      test("a finger on a T-account amount drags it instead of scrolling", async ({ page }) => {
+        await openVisuals(page);
+        await bringUp(page, "#p-e2-0");
+        const before = await page.evaluate(() => window.scrollY);
+        const finger = await Finger.on(page);
+        const from = await center(page.locator("#p-e2-0"));
+        await finger.down(from);
+        await finger.glide(from, { x: from.x + 10, y: from.y + 200 }, 10);
+        expect(await page.evaluate(() => window.__visuals.status())).toBe("dragging");
+        expect(await page.evaluate(() => window.scrollY)).toBe(before);
+        await finger.up();
+      });
+    });
+  });
+
   test("a cancelled touch abandons the drag and leaves the books alone", async ({ page }) => {
     // Dragology 0.2.0 ignores pointercancel on its own; usePointerGuard handles it.
     await openSpike(page);

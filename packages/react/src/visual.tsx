@@ -1,5 +1,7 @@
 import { diagnose, formatCents } from "@entrypad/core";
 import type { Account, Book, Diagnostic } from "@entrypad/core";
+import { renderStateReadOnly } from "dragology";
+import type { DragSpec, DragSpecBuilder, LayeredSvgx } from "dragology";
 import { useCallback, useMemo, useRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { Highlight, HighlightStore } from "./highlight.js";
@@ -36,6 +38,8 @@ export interface InteractionProps {
   touchScroll?: boolean;
   /** Instrumentation: called whenever a drag starts or ends. */
   onDragStatus?: (status: "idle" | "dragging") => void;
+  /** Instrumentation: called each time the visual draws a state, including the previews drawn mid-drag. */
+  onRenderState?: () => void;
 }
 
 /** The book as it stood after the first `at` entries. */
@@ -65,6 +69,111 @@ export function squiggle(width: number): string {
   let d = "M0 0";
   for (let x = 0; x < Math.max(4, width); x += 4) d += " q 1 -2.5 2 0 q 1 2.5 2 0";
   return d;
+}
+
+/** A rectangle in the visual's own (canvas) coordinates. */
+export interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * A drop target that renders its preview only once the pointer enters it.
+ * Dragology's own `d.dropTarget` renders its state as soon as a drag starts,
+ * so a drag with 30 possible targets renders the whole visual 30 times on
+ * its first frame. Here the target's box comes from the visual's layout
+ * instead, and the preview is rendered (once) on first entry.
+ */
+export function lazyDropTarget<T extends object>(d: DragSpecBuilder<T>, box: Box, state: T): DragSpec<T> {
+  return d.custom((ctx) => {
+    let preview: LayeredSvgx | undefined;
+    const render = () => (preview ??= renderStateReadOnly(ctx, state));
+    return (frame) => {
+      const { x, y } = frame.pointer;
+      const inside = x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
+      return { preview: render, dropState: state, gap: inside ? 0 : Infinity };
+    };
+  });
+}
+
+/**
+ * How much one step of an amount drag (a pixel, or an arrow key press) adds:
+ * the largest power of ten that is at most 1% of the amount, and never less
+ * than the book's smallest unit (a dollar, or a cent with two decimals).
+ */
+export function amountStep(cents: number, decimals: 0 | 2): number {
+  let step = decimals === 2 ? 1 : 100;
+  while (step * 10 * 100 <= Math.abs(cents)) step *= 10;
+  return step;
+}
+
+/**
+ * A copy of the book with one line's amount changed. When the other side of
+ * the entry has a single line, that line changes by the same difference, so
+ * a balanced entry stays balanced; otherwise the entry is left unbalanced
+ * and its squiggle says so. A line that was left blank keeps its blank, since
+ * the parser will fill it in again.
+ */
+export function withAmount(book: Book, entryId: string, lineIndex: number, cents: number): Book {
+  return {
+    ...book,
+    entries: book.entries.map((e) => {
+      if (e.id !== entryId) return e;
+      const line = e.lines[lineIndex];
+      if (!line || line.amount === cents) return e;
+      const delta = cents - line.amount;
+      const others = e.lines.flatMap((l, i) => (l.side !== line.side ? [i] : []));
+      const partner = others.length === 1 ? others[0] : undefined;
+      return {
+        ...e,
+        lines: e.lines.map((l, i) => {
+          if (i === lineIndex) {
+            // Written out from now on, even if it was inferred before.
+            const { blank: _b, inferred: _i, ...rest } = l;
+            return { ...rest, amount: cents };
+          }
+          return i === partner ? { ...l, amount: l.amount + delta } : l;
+        }),
+      };
+    }),
+  };
+}
+
+/**
+ * Dragging an amount up or down to change it, while the pointer stays inside
+ * `box`. Each pixel up adds one `step`, each pixel down takes one away, and
+ * the amount never goes below one step. Outside the box the spec gives way
+ * (an infinite gap), so a `closest` around it can switch to another drag.
+ * The amount stays where it is on screen; only its value changes.
+ */
+export function scrubAmount<T extends object>(
+  d: DragSpecBuilder<T>,
+  box: Box,
+  start: number,
+  step: number,
+  stateFor: (cents: number) => T,
+): DragSpec<T> {
+  return d.custom((ctx) => {
+    const previews = new Map<number, LayeredSvgx>();
+    // Measured from where the pointer was on the drag's first frame.
+    let originY: number | undefined;
+    return (frame) => {
+      const { x, y } = frame.pointer;
+      originY ??= y;
+      const inside = x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height;
+      const steps = Math.round(originY - y);
+      const cents = Math.max(step, start + steps * step);
+      const state = stateFor(cents);
+      const preview = () => {
+        let p = previews.get(cents);
+        if (!p) previews.set(cents, (p = renderStateReadOnly(ctx, state)));
+        return p;
+      };
+      return { preview, dropState: state, gap: inside ? 0 : Infinity };
+    };
+  });
 }
 
 /** Marks drag handles so a finger on them drags instead of scrolling (see useTouchScroll). */

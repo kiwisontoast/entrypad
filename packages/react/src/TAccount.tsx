@@ -12,8 +12,12 @@ import {
   DRAG_HANDLE,
   entryAttrs,
   highlightHandlers,
+  amountStep,
   KEEP_CLICKS,
+  lazyDropTarget,
   money,
+  scrubAmount,
+  withAmount,
   resolveTheme,
   squiggle,
   useDragReporter,
@@ -112,12 +116,48 @@ export function reclassify(book: Book, entryId: string, lineIndex: number, accou
   };
 }
 
-/** Drop onto any shown account except the posting's own. Far from all of them, nothing changes. */
-function dropOnAccount(d: DragSpecBuilder<TState>, state: TState, accounts: readonly Account[], row: LedgerRow, from: string): DragSpec<TState> {
-  const targets = accounts
-    .filter((a) => a.id !== from)
-    .map((a) => d.dropTarget(tAccountId(a.id), { ...state, book: reclassify(state.book, row.entryId, row.lineIndex, a.id), moving: null }));
-  return d.closest(targets).whenFar(state).withFloating();
+/** Where the T-account at a given index sits, in canvas coordinates. */
+function tPosition(layout: Layout, index: number) {
+  return {
+    x: PAD + (index % layout.cols) * (layout.tW + GAP),
+    y: PAD + Math.floor(index / layout.cols) * (T_H + GAP),
+  };
+}
+
+const tBox = (layout: Layout, index: number) => ({ ...tPosition(layout, index), width: layout.tW, height: T_H });
+
+/**
+ * Dragging a posting. While the pointer stays inside the posting's own
+ * T-account, moving up or down changes the amount (and the other side of a
+ * two-line entry with it). Once it leaves, the posting floats and drops onto
+ * any other shown account to reclassify it; far from all of them, nothing
+ * changes. Targets render their preview only when the pointer reaches them,
+ * which keeps picking a posting up cheap.
+ */
+function dragPosting(
+  d: DragSpecBuilder<TState>,
+  state: TState,
+  accounts: readonly Account[],
+  layout: Layout,
+  row: LedgerRow,
+  from: string,
+): DragSpec<TState> {
+  const targets: DragSpec<TState>[] = [];
+  let own: number | undefined;
+  accounts.forEach((a, index) => {
+    if (a.id === from) return void (own = index);
+    targets.push(lazyDropTarget(d, tBox(layout, index), { ...state, book: reclassify(state.book, row.entryId, row.lineIndex, a.id), moving: null }));
+  });
+  const move = d.closest(targets).whenFar(state).withFloating();
+  if (own === undefined) return move;
+  const step = amountStep(row.amount, state.book.settings.decimals);
+  // First in the list, so it wins the tie at the start of the drag.
+  const scrub = scrubAmount(d, tBox(layout, own), row.amount, step, (cents) => ({
+    ...state,
+    book: withAmount(state.book, row.entryId, row.lineIndex, cents),
+    moving: null,
+  }));
+  return d.closest([scrub, move]);
 }
 
 const isActivation = (e: KeyboardEvent) => e.key === "Enter" || e.key === " ";
@@ -130,11 +170,13 @@ function makeDraggable(
   theme: Theme,
   frames: boolean,
   editable: boolean,
+  onRenderState: (() => void) | undefined,
 ): Draggable<TState> {
   const T_W = layout.tW;
   const abnormal = new Map(findings.filter((f) => f.code === "abnormal-balance" && f.target.account).map((f) => [f.target.account!, f]));
 
   return ({ state, d, draggedId }) => {
+    onRenderState?.();
     const view = viewBook(state.book, at);
     const rows = ledger(view);
     const z = (id: string) => (draggedId === id ? "/1" : false);
@@ -161,12 +203,12 @@ function makeDraggable(
             role: "button",
             // Only ever "true" or absent: Dragology can't blend two different strings.
             ...(picked && { "aria-pressed": "true" }),
-            dragologyOnDrag: () => dropOnAccount(d, state, accounts, r, account.id),
+            dragologyOnDrag: () => dragPosting(d, state, accounts, layout, r, account.id),
           })}
         >
           {/* The accessible name lives in a <title>, not aria-label: Dragology
               blends attributes between states and can't blend two strings. */}
-          <title>{`${account.name}, ${side} ${amount}${r.memo ? `, ${r.memo}` : ""}${editable ? ". Press Enter, then choose another account to move it." : ""}`}</title>
+          <title>{`${account.name}, ${side} ${amount}${r.memo ? `, ${r.memo}` : ""}${editable ? ". Press Enter, then choose another account to move it. Press the up or down arrow to change the amount." : ""}`}</title>
           <rect
             x={-72}
             y={-13}
@@ -198,10 +240,7 @@ function makeDraggable(
       return out;
     };
 
-    const position = (index: number) => ({
-      x: PAD + (index % layout.cols) * (T_W + GAP),
-      y: PAD + Math.floor(index / layout.cols) * (T_H + GAP),
-    });
+    const position = (index: number) => tPosition(layout, index);
 
     const drawT = (account: Account, row: AccountLedger, index: number): Svgx => {
       const { x, y } = position(index);
@@ -274,7 +313,8 @@ function makeDraggable(
 /**
  * A grid of T-accounts with every posting, a running total and the balance.
  * Drag a posted amount onto another T-account to reclassify it, or click it
- * (or press Enter) and then click the account to move it to.
+ * (or press Enter) and then click the account to move it to. Drag it up or
+ * down inside its own T-account (or press the arrow keys) to change it.
  */
 export function TAccount(props: TAccountProps) {
   const {
@@ -309,6 +349,16 @@ export function TAccount(props: TAccountProps) {
     if (posting && posting.account !== accountId) onBookChange?.(reclassify(book, entryId!, Number(line), accountId));
   };
 
+  /** The keyboard version of dragging an amount: one step per press (ten with Shift). */
+  const nudge = (key: string, steps: number) => {
+    const [entryId, line] = key.split(":");
+    const posting = book.entries.find((e) => e.id === entryId)?.lines[Number(line)];
+    if (!posting) return;
+    const step = amountStep(posting.amount, book.settings.decimals);
+    const cents = Math.max(step, posting.amount + steps * step);
+    if (cents !== posting.amount) onBookChange?.(withAmount(book, entryId!, Number(line), cents));
+  };
+
   // Clicks and keys are handled here, on the container, from the elements'
   // data attributes (see entryAttrs).
   const activate = (target: EventTarget | null) => {
@@ -326,12 +376,20 @@ export function TAccount(props: TAccountProps) {
           e.preventDefault();
           activate(e.target);
         } else if (e.key === "Escape") setMoving(null);
+        else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          const posting = closestWith(e.target, "entrypad-posting")?.getAttribute("data-entrypad-posting");
+          if (!posting) return;
+          e.preventDefault();
+          nudge(posting, (e.key === "ArrowUp" ? 1 : -1) * (e.shiftKey ? 10 : 1));
+        }
       },
     }),
   };
 
+  const onRender = useRef(props.onRenderState);
+  onRender.current = props.onRenderState;
   const draggable = useMemo(
-    () => makeDraggable(accounts, layout, at, findings, theme, staticPartsAsComponents, editable),
+    () => makeDraggable(accounts, layout, at, findings, theme, staticPartsAsComponents, editable, () => onRender.current?.()),
     // Layout is plain numbers; rebuild only when they change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [accounts, layout.cols, layout.tW, layout.width, layout.height, at, findings, theme, staticPartsAsComponents, editable],

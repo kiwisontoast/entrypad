@@ -152,7 +152,12 @@ test.describe("drag performance", () => {
         reactCommit: stats(log.commits),
         frameInterval: stats(log.frames),
         framesOver33ms: log.frames.filter((f) => f > 33.4).length,
-        longFrames: { n: log.longFrames.length, totalMs: Math.round(log.longFrames.reduce((s, f) => s + f.duration, 0)) },
+        longFrames: {
+          n: log.longFrames.length,
+          totalMs: Math.round(log.longFrames.reduce((s, f) => s + f.duration, 0)),
+          // Usually the frame that picks the posting up.
+          longestMs: Math.round(Math.max(0, ...log.longFrames.map((f) => f.duration))),
+        },
         dragged: log.statuses.includes("dragging"),
         idleAfter: (await page.evaluate(() => window.__visuals.status())) === "idle",
         rentStill: await page.evaluate(() => window.__visuals.book().entries[1]!.lines[0]!.account),
@@ -165,6 +170,8 @@ test.describe("drag performance", () => {
       expect(row.idleAfter).toBe(true);
       expect(row.rentStill).toBe("rent-expense");
       if (cpu === 1) expect(row.reactCommit.p50).toBeLessThan(16);
+      // The Phase 2 target for the pick-up hitch at 4x (a mid-range tablet).
+      if (cpu === 4) expect(row.longFrames.longestMs).toBeLessThan(500);
     });
   }
 

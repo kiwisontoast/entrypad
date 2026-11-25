@@ -62,6 +62,66 @@ test.describe("Phase 1 visuals", () => {
     await expect(page.locator("#p-e2-0")).not.toHaveAttribute("aria-pressed");
   });
 
+  test("dragging a T-account amount up raises it, and the other side of the entry with it", async ({ page }) => {
+    await openVisuals(page);
+    // Jan 2 rent, 1,800: one step is $10 (the largest power of ten within 1%).
+    const from = await center(page.locator("#p-e2-0"));
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x, from.y - 4, { steps: 2 });
+    await page.mouse.move(from.x, from.y - 34, { steps: 10 });
+    // Mid-drag the amount stays where it is and shows the new value.
+    const mid = await center(page.locator("#p-e2-0"));
+    expect(Math.abs(mid.y - from.y)).toBeLessThan(2);
+    await page.mouse.up();
+    await expect.poll(() => line(page, "e2", 0).then((l) => l?.amount)).toBeGreaterThan(180_000);
+    const debit = (await line(page, "e2", 0))!;
+    const credit = (await line(page, "e2", 1))!;
+    expect(debit.account).toBe("rent-expense");
+    expect(debit.amount % 1_000).toBe(0);
+    expect(credit.amount).toBe(debit.amount);
+    await expect(page.locator("#p-e2-0")).toContainText((debit.amount / 100).toLocaleString("en-US"));
+  });
+
+  test("dragging an amount down lowers it", async ({ page }) => {
+    await openVisuals(page);
+    const from = await center(page.locator("#p-e2-0"));
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x, from.y + 4, { steps: 2 });
+    // Still inside Rent Expense's T, so the amount changes instead of moving.
+    await page.mouse.move(from.x + 1, from.y + 50, { steps: 10 });
+    await page.mouse.up();
+    await expect.poll(() => line(page, "e2", 0).then((l) => l?.amount)).toBeLessThan(180_000);
+    expect((await line(page, "e2", 0))!.amount).toBeGreaterThanOrEqual(1_000);
+  });
+
+  test("the arrow keys change a focused amount, ten steps with Shift", async ({ page }) => {
+    await openVisuals(page);
+    await page.locator("#p-e2-0").focus();
+    await page.keyboard.press("ArrowUp");
+    await expect.poll(() => line(page, "e2", 0).then((l) => l?.amount)).toBe(181_000);
+    expect((await line(page, "e2", 1))!.amount).toBe(181_000);
+    await page.locator("#p-e2-0").focus();
+    await page.keyboard.press("Shift+ArrowDown");
+    await expect.poll(() => line(page, "e2", 0).then((l) => l?.amount)).toBe(171_000);
+    await expect(page.locator("#t-rent-expense")).toContainText("1,710");
+  });
+
+  test("picking up an amount renders only a few states, whatever the number of accounts", async ({ page }) => {
+    // Drop targets render their preview only when the pointer reaches them,
+    // so the first frame of a drag doesn't draw all 30 T-accounts 30 times.
+    await openVisuals(page, "?accounts=30");
+    const from = await center(page.locator("#p-e2-0"));
+    await page.mouse.move(from.x, from.y);
+    await page.evaluate(() => (window.__visuals.renders = 0));
+    await page.mouse.down();
+    await page.mouse.move(from.x + 6, from.y + 6, { steps: 2 });
+    await expect.poll(() => page.evaluate(() => window.__visuals.status())).toBe("dragging");
+    expect(await page.evaluate(() => window.__visuals.renders)).toBeLessThan(8);
+    await page.mouse.up();
+  });
+
   test("dragging a card line to the other column flips its side", async ({ page }) => {
     await openVisuals(page);
     // Jan 1: Common Stock, credited. Drag it left into the debit column.
