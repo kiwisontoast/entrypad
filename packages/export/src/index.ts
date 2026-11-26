@@ -15,3 +15,7 @@ export {
   selectFaces,
 } from "./fonts.js";
 export type { Fetcher, FontFaceSource, FontUse } from "./fonts.js";
+export { canvasToPng, copyPng, svgSize, svgToCanvas, svgToPng } from "./png.js";
+export type { RasterOptions } from "./png.js";
+export { encodeGif, gifBlob } from "./gif.js";
+export type { GifFrame, GifOptions } from "./gif.js";

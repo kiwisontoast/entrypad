@@ -12,6 +12,7 @@ import bakery from "../../../../examples/sunrise-bakery.entrypad?raw";
 import advisory from "../../../../examples/northfield-advisory.entrypad?raw";
 import "../typography.js";
 import { analyse, lintDiagnostics, writeBook } from "./analyse.js";
+import { ExportMenu, slug } from "./exportMenu.js";
 import type { Analysis } from "./analyse.js";
 import { shorthandLanguage } from "./language.js";
 import "./editor.css";
@@ -50,7 +51,7 @@ function storeSettings(settings: EntrypadSettings): void {
 }
 
 /** Settings the editor doesn't use yet; they stay editable and are marked. */
-const notHere = (key: string) => key.startsWith("export.") || key.startsWith("sharing.");
+const notHere = (key: string) => key.startsWith("sharing.");
 
 const editorTheme = EditorView.theme({
   "&": { height: "100%", fontSize: "13.5px", backgroundColor: theme.surface },
@@ -79,6 +80,9 @@ function App() {
   const [width, setWidth] = useState(720);
   const editorEl = useRef<HTMLDivElement>(null);
   const visualsEl = useRef<HTMLDivElement>(null);
+  const equationEl = useRef<HTMLElement>(null);
+  const tAccountsEl = useRef<HTMLElement>(null);
+  const cardsEl = useRef<HTMLElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -214,10 +218,17 @@ function App() {
       <div className="workspace">
         <div className="editor" ref={editorEl} />
         <div className="visuals" ref={visualsEl}>
-          <section id="equation">
+          <section id="equation" ref={equationEl}>
             <Equation book={book} {...(shownAt !== undefined && { at: shownAt })} showDiagnostics={display.showDiagnostics} maxWidth={width} />
+            <ExportMenu
+              section={equationEl}
+              fileName={slug(book.name ?? "book", "equation")}
+              settings={settings}
+              count={count}
+              renderAt={(n) => <Equation book={book} at={n} showDiagnostics={false} maxWidth={width} />}
+            />
           </section>
-          <section id="t-accounts">
+          <section id="t-accounts" ref={tAccountsEl}>
             <TAccount
               book={book}
               onBookChange={onBookChange}
@@ -228,8 +239,15 @@ function App() {
               maxWidth={width}
               {...interaction}
             />
+            <ExportMenu
+              section={tAccountsEl}
+              fileName={slug(book.name ?? "book", "t-accounts")}
+              settings={settings}
+              count={count}
+              renderAt={(n) => <TAccount book={book} at={n} {...(tAccounts && { accounts: tAccounts })} maxWidth={width} />}
+            />
           </section>
-          <section id="cards">
+          <section id="cards" ref={cardsEl}>
             <EntryCards
               book={book}
               onBookChange={onBookChange}
@@ -238,6 +256,13 @@ function App() {
               diagnostics={findings}
               maxWidth={width}
               {...interaction}
+            />
+            <ExportMenu
+              section={cardsEl}
+              fileName={slug(book.name ?? "book", "entries")}
+              settings={settings}
+              count={count}
+              renderAt={(n) => <EntryCards book={book} at={n} maxWidth={width} />}
             />
           </section>
         </div>

@@ -129,3 +129,37 @@ select:hover {
     border-bottom: 1px solid var(--border);
   }
 }
+
+.export {
+  margin: 4px 0 12px;
+  font-size: 13px;
+}
+
+.export summary {
+  display: inline-block;
+  cursor: pointer;
+  color: var(--accent);
+  user-select: none;
+}
+
+.export-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.export-items button {
+  padding: 2px 8px;
+  font-size: 13px;
+}
+
+.export-items button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.export-status {
+  color: var(--muted);
+}

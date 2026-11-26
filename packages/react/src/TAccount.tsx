@@ -42,7 +42,8 @@ const PAD = 16;
 const GAP = 16;
 const T_W_MAX = 184;
 const T_W_MIN = 150;
-const T_H = 132;
+// Tall enough that a full column's last amount clears the rule above the balance.
+const T_H = 140;
 const ROW_TOP = 50;
 const ROW_H = 17;
 const MAX_ROWS = 4;

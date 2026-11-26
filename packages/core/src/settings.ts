@@ -81,6 +81,8 @@ export interface EntrypadSettings {
     pngScale: 1 | 2 | 3;
     /** Embed fonts in SVG exports so slides render them exactly. */
     embedFonts: boolean;
+    /** How long each entry stays on screen in a step-through GIF, in seconds. */
+    gifSecondsPerEntry: 1 | 1.5 | 2 | 3;
   };
   sharing: {
     /** Suggest a file instead of a link above this many characters. */
@@ -137,7 +139,7 @@ export function defaultSettings(): EntrypadSettings {
       exportCurrencySymbol: true,
     },
     display: { showDiagnostics: true, staticPartsAsComponents: true, singlePointerDrags: true, touchScroll: true },
-    export: { includeDiagnostics: false, pngScale: 2, embedFonts: true },
+    export: { includeDiagnostics: false, pngScale: 2, embedFonts: true, gifSecondsPerEntry: 1.5 },
     sharing: { linkWarningLength: 8000 },
   };
 }
@@ -448,6 +450,20 @@ export const settingsSpec: readonly SettingSpec[] = [
     description: "So PowerPoint and Keynote show the same lettering.",
     scope: "app",
     ...onOff,
+  },
+  {
+    key: "export.gifSecondsPerEntry",
+    group: "Export",
+    label: "Time per entry in GIFs",
+    description: "How long each entry stays on screen when a step-through is saved as a GIF.",
+    scope: "app",
+    type: "choice",
+    choices: [
+      { value: 1, label: "1 second" },
+      { value: 1.5, label: "1.5 seconds" },
+      { value: 2, label: "2 seconds" },
+      { value: 3, label: "3 seconds" },
+    ],
   },
   {
     key: "sharing.linkWarningLength",
