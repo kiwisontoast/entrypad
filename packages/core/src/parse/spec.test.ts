@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { effectiveGroup } from "../groups.js";
 import type { Line } from "../types.js";
 import { parse } from "./parse.js";
 import type { ParseResult } from "./parse.js";
@@ -79,6 +80,14 @@ const expectations: (((r: ParseResult) => void) | { skip: string })[] = [
       "autofix.inferBlankAmount": false,
       "diagnostics.zero-amount": "off",
     }),
+  // Statement groups
+  (r) =>
+    expect(r.book.chart.slice(-4).map((a) => [a.name, a.group, effectiveGroup(a, r.book.chart)])).toEqual([
+      ["Delivery Vans", "property-plant-equipment", "property-plant-equipment"],
+      ["Accumulated Depreciation, Vans", undefined, "property-plant-equipment"],
+      ["Term Loan", "long-term-liabilities", "long-term-liabilities"],
+      ["Owner Drawings", "dividends", "dividends"],
+    ]),
   { skip: "the grammar, in EBNF" },
   { skip: "hledger and shorthand side by side; the hledger half is tested with the importer" },
 ];

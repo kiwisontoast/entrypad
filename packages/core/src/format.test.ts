@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { usGaapIntroChart } from "./charts/usGaapIntro.js";
 import { applyChanges, bookChanges, editEntry, entryChanges } from "./edit.js";
 import { format, formatAmount, quoteName } from "./format.js";
+import { groupsFor } from "./groups.js";
 import { accountId, parse } from "./parse/parse.js";
 import { defaultSettings, setSetting } from "./settings.js";
 import type { Account, Book, Entry, EntryTag, Line } from "./types.js";
@@ -109,6 +110,17 @@ open Common Stock 5,100
 `);
   });
 
+  it("writes a group only when it differs from the one the account would keep", () => {
+    const text = `account "Delivery Vans" asset group property-plant-equipment
+account "Notes Payable" liability group long-term-liabilities
+account "Equipment" asset alias "Kit"
+`;
+    expect(format(read(text).book)).toBe(`account "Equipment" asset alias "Kit"
+account "Notes Payable" liability group long-term-liabilities
+account "Delivery Vans" asset group property-plant-equipment
+`);
+  });
+
   it("spells out every side when an entry starts with a credit", () => {
     const book = read("Jan 1 x\ncr Common Stock 100\ndr Cash 100\n").book;
     const text = format(book);
@@ -151,8 +163,11 @@ function randomBook(seed: number): Book {
   const r = random(seed);
   let chart: Account[] = [...usGaapIntroChart];
   for (const name of CUSTOM) {
-    if (r.chance(0.3)) chart = [...chart, { id: accountId(name, chart), name, type: r.pick(["asset", "liability", "expense"] as const), normal: "debit" }];
+    if (!r.chance(0.3)) continue;
+    const type = r.pick(["asset", "liability", "expense"] as const);
+    chart = [...chart, { id: accountId(name, chart), name, type, normal: "debit", ...(r.chance(0.5) && { group: r.pick(groupsFor(type)) }) }];
   }
+  chart = chart.map((a) => (r.chance(0.05) ? { ...a, group: r.pick(groupsFor(a.type)) } : a));
   chart = chart.map((a) => (a.type === "liability" && !usGaapIntroChart.includes(a) ? { ...a, normal: "credit" } : a));
   const period = r.pick([undefined, { start: "2026-01-01", end: "2026-12-31" }, { start: "2025-07-01", end: "2026-06-30" }]);
   const year = () => (period ? +r.pick([period.start, period.end]).slice(0, 4) : r.int(2024, 2027));

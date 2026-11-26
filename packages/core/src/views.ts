@@ -42,10 +42,10 @@ export interface Equation {
  * How much of the book a view covers: the first `at` entries, in file
  * order, as a step-through shows them. Leave it out for the whole book.
  */
-type At = number | undefined;
+export type At = number | undefined;
 
 /** Caches one result per book object and `at`, since books are never changed in place. */
-function memo<T>(compute: (book: Book, at: At) => T): (book: Book, at?: number) => T {
+export function memo<T>(compute: (book: Book, at: At) => T): (book: Book, at?: number) => T {
   const cache = new WeakMap<Book, Map<At, T>>();
   return (book, at) => {
     const key = at === undefined || at >= book.entries.length ? undefined : Math.max(0, Math.floor(at));
@@ -56,7 +56,7 @@ function memo<T>(compute: (book: Book, at: At) => T): (book: Book, at?: number) 
   };
 }
 
-const entriesUpTo = (book: Book, at: At) => (at === undefined ? book.entries : book.entries.slice(0, at));
+export const entriesUpTo = (book: Book, at: At) => (at === undefined ? book.entries : book.entries.slice(0, at));
 
 /**
  * Every account's postings with a running balance after each one, in file

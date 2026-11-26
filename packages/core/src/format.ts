@@ -1,4 +1,5 @@
 import { usGaapIntroChart } from "./charts/usGaapIntro.js";
+import { isGroupFor } from "./groups.js";
 import { groupThousands } from "./money.js";
 import { looksLikeAmount } from "./parse/amount.js";
 import { inferYear } from "./parse/date.js";
@@ -113,8 +114,11 @@ export function formatOpening(entry: Entry, chart: readonly Account[], newline =
     .join(newline);
 }
 
-function accountLine(account: Account, chart: readonly Account[]): string {
+/** `original` is the same account in the starting chart, whose group a redefinition keeps. */
+function accountLine(account: Account, chart: readonly Account[], original?: Account): string {
   let line = `account "${account.name}" ${account.type}`;
+  const keptGroup = isGroupFor(account.type, original?.group) ? original!.group : undefined;
+  if (isGroupFor(account.type, account.group) && account.group !== keptGroup) line += ` group ${account.group}`;
   const base = account.contraOf ? chart.find((a) => a.id === account.contraOf) : undefined;
   if (base) line += ` contra "${base.name}"`;
   for (const alias of account.aliases ?? []) line += ` alias "${alias}"`;
@@ -152,7 +156,7 @@ export function format(book: Book, options: FormatOptions = {}): string {
   head.push(...fileSettingLines(settings));
   for (const account of book.chart) {
     const base = baseChart.find((a) => a.id === account.id);
-    if (!base || !same(base, account)) head.push(accountLine(account, book.chart));
+    if (!base || !same(base, account)) head.push(accountLine(account, book.chart, base));
   }
   if (head.length) sections.push(head.join(nl));
 

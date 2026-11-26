@@ -184,10 +184,11 @@ This adds an account to the chart. The name is in quotes, followed by its type: 
 | `contra "<Account>"` | Marks it as a contra account. Its normal side is the opposite of the account it offsets. |
 | `alias "<Name>"` | Another name that matches it. Can repeat. |
 | `normal debit` or `normal credit` | Overrides the normal side, e.g. for Dividends |
+| `group <group>` | The section of the financial statements it appears in, e.g. `group property-plant-equipment`. See [Statement groups](#statement-groups). |
 
 Without `contra` or `normal`, assets and expenses have a normal debit balance and the other types a normal credit balance. An `account` line can come anywhere in the file, and postings above it can use the account.
 
-Declaring an account whose name is already in the chart replaces that account's type and options rather than adding a second one, so `account "Cash" asset alias "Bank"` lets `Bank` reach Cash. A `contra` account that isn't in the chart is flagged `unknown-account`.
+Declaring an account whose name is already in the chart replaces that account's type and options rather than adding a second one, so `account "Cash" asset alias "Bank"` lets `Bank` reach Cash. The account keeps its group unless the line names another one or the new type doesn't allow it. A `contra` account that isn't in the chart is flagged `unknown-account`.
 
 ### `show`
 
@@ -212,6 +213,61 @@ This changes one setting for this book. The line applies to the whole file, wher
 Only settings that affect how a book is read or checked can go in a file. They are listed under [Settings](#settings). Display and export preferences belong to the person viewing the book, so they live in each person's own settings.
 
 A `set` line in the file overrides your own settings for that book. When you save or share a book, the editor writes a `set` line for each of these settings you have changed from its default, so the book reads the same for everyone who opens it.
+
+## Statements
+
+Entrypad works out the trial balance and the financial statements from the entries. Each one can cover the whole book or only the entries up to a given point, as a step-through shows them. Amounts are integer cents throughout, so every subtotal is exact.
+
+### Statement groups
+
+Every account belongs to a statement group, which decides where the statements show it. The group comes from the `group` option on the `account` line. A contra account without one takes the group of the account it offsets, so accumulated depreciation sits under property, plant and equipment. Any other account without one takes the default for its type.
+
+| Type | Groups (default first) |
+| --- | --- |
+| `asset` | `current-assets`, `cash`, `investments`, `property-plant-equipment`, `intangible-assets`, `other-assets` |
+| `liability` | `current-liabilities`, `short-term-debt`, `long-term-liabilities` |
+| `equity` | `contributed-capital`, `retained-earnings`, `dividends` |
+| `revenue` | `revenue`, `other-revenue` |
+| `expense` | `operating-expenses`, `cost-of-sales`, `other-expenses`, `income-taxes` |
+
+A group that doesn't belong to the account's type makes the line unreadable, and the line is flagged `unreadable-line`.
+
+The built-in chart puts Cash and Petty Cash in `cash`, land, buildings and equipment (with their accumulated depreciation) in `property-plant-equipment`, Notes Payable in `short-term-debt`, Bonds Payable in `long-term-liabilities`, Common Stock and Additional Paid-in Capital in `contributed-capital`, Retained Earnings and Income Summary in `retained-earnings`, Dividends in `dividends`, Interest Revenue in `other-revenue`, Cost of Goods Sold in `cost-of-sales`, Interest Expense in `other-expenses` and Income Tax Expense in `income-taxes`. Every other asset is a current asset, every other liability a current liability, and every other expense an operating expense.
+
+```
+account "Delivery Vans" asset group property-plant-equipment
+account "Accumulated Depreciation, Vans" asset contra "Delivery Vans"
+account "Term Loan" liability group long-term-liabilities
+account "Owner Drawings" equity normal debit group dividends
+```
+
+### Closing entries
+
+Revenue, expenses and dividends count towards retained earnings until an entry tagged `[closing]` moves them there, as in the accounting equation. The statements leave closing entries out, so they show the same figures before and after the books are closed. Closing can go straight to Retained Earnings or through Income Summary.
+
+### Trial balance
+
+Every account with a balance, in chart order, with the balance in the debit or the credit column, and the two column totals. Accounts that net to zero are left out. Closing entries count here, so after closing it is the post-closing trial balance.
+
+### Income statement
+
+A multi-step statement:
+
+| Line | Worked out as |
+| --- | --- |
+| Revenue | The `revenue` accounts. A contra revenue account, such as sales returns, reduces it. |
+| Gross profit | Revenue less the `cost-of-sales` accounts |
+| Operating income | Gross profit less the `operating-expenses` accounts |
+| Income before income taxes | Operating income plus `other-revenue`, less `other-expenses` |
+| Net income | Income before income taxes less the `income-taxes` accounts |
+
+### Statement of retained earnings
+
+Beginning retained earnings, plus net income, less dividends, gives ending retained earnings. Beginning retained earnings is the balance of the `retained-earnings` accounts outside closing entries, usually from an `open` line. Dividends are the activity in the `dividends` accounts outside closing entries.
+
+### Balance sheet
+
+A classified balance sheet. Assets are shown as current assets (the `cash` accounts first), investments, property, plant and equipment, intangible assets and other assets. Liabilities are shown as current liabilities (short-term debt included) and long-term liabilities. Equity is the `contributed-capital` accounts plus ending retained earnings from the statement above, so income not yet closed is included and the balance sheet balances whenever the entries do. Contra accounts are shown as negative lines within their section.
 
 ## Settings
 
@@ -301,7 +357,14 @@ account-decl   = "account" , ws1 , quoted , ws1 , type , { ws1 , account-option 
 type           = "asset" | "liability" | "equity" | "revenue" | "expense" ;
 account-option = "contra" , ws1 , quoted
                | "alias" , ws1 , quoted
-               | "normal" , ws1 , ( "debit" | "credit" ) ;
+               | "normal" , ws1 , ( "debit" | "credit" )
+               | "group" , ws1 , group-name ;
+group-name     = "cash" | "current-assets" | "investments" | "property-plant-equipment"
+               | "intangible-assets" | "other-assets"
+               | "current-liabilities" | "short-term-debt" | "long-term-liabilities"
+               | "contributed-capital" | "retained-earnings" | "dividends"
+               | "revenue" | "other-revenue"
+               | "cost-of-sales" | "operating-expenses" | "other-expenses" | "income-taxes" ;
 show           = "show" , ws1 , visual , [ { ws } , ":" , { ws } , option , { "," , { ws } , option } ] ;
 visual         = "entry-cards" | "t-accounts" | "equation" | "statement-flow"
                | "cash-flow" | "trial-balance" | "schedule" ;

@@ -28,12 +28,96 @@
   },
   "trialBalance": {
     "debits": "53,924.90",
-    "credits": "53,924.90"
+    "credits": "53,924.90",
+    "rows": {
+      "Cash": {
+        "debit": "21,710.44"
+      },
+      "Accounts Receivable": {
+        "debit": "11,353.61"
+      },
+      "Supplies": {
+        "debit": "290.00"
+      },
+      "Prepaid Rent": {
+        "debit": "6,000.00"
+      },
+      "Equipment": {
+        "debit": "4,800.00"
+      },
+      "Accumulated Depreciation, Equipment": {
+        "credit": "133.33"
+      },
+      "Notes Payable": {
+        "credit": "10,000.00"
+      },
+      "Interest Payable": {
+        "credit": "16.67"
+      },
+      "Income Taxes Payable": {
+        "credit": "2,730.85"
+      },
+      "Unearned Revenue": {
+        "credit": "6,000.00"
+      },
+      "Common Stock": {
+        "credit": "15,000.00"
+      },
+      "Service Revenue": {
+        "credit": "20,044.05"
+      },
+      "Wages Expense": {
+        "debit": "5,500.00"
+      },
+      "Rent Expense": {
+        "debit": "1,200.00"
+      },
+      "Supplies Expense": {
+        "debit": "190.00"
+      },
+      "Depreciation Expense": {
+        "debit": "133.33"
+      },
+      "Interest Expense": {
+        "debit": "16.67"
+      },
+      "Income Tax Expense": {
+        "debit": "2,730.85"
+      }
+    }
   },
   "equation": {
     "assets": "44,020.72",
     "liabilities": "18,747.52",
     "equity": "25,273.20",
     "netIncome": "10,273.20"
+  },
+  "incomeStatement": {
+    "revenue": "20,044.05",
+    "costOfSales": "0.00",
+    "grossProfit": "20,044.05",
+    "operatingExpenses": "7,023.33",
+    "operatingIncome": "13,020.72",
+    "otherExpenses": "16.67",
+    "incomeBeforeTaxes": "13,004.05",
+    "incomeTaxes": "2,730.85",
+    "netIncome": "10,273.20"
+  },
+  "retainedEarnings": {
+    "beginning": "0.00",
+    "netIncome": "10,273.20",
+    "dividends": "0.00",
+    "ending": "10,273.20"
+  },
+  "balanceSheet": {
+    "currentAssets": "39,354.05",
+    "propertyPlantEquipment": "4,666.67",
+    "totalAssets": "44,020.72",
+    "currentLiabilities": "18,747.52",
+    "totalLiabilities": "18,747.52",
+    "contributedCapital": "15,000.00",
+    "retainedEarnings": "10,273.20",
+    "totalEquity": "25,273.20",
+    "totalLiabilitiesAndEquity": "44,020.72"
   }
 }

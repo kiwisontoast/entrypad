@@ -272,9 +272,41 @@ describe("directives", () => {
   it("redefines an account already in the chart instead of adding a second one", () => {
     const { book } = read('account "Cash" asset alias "Bank"\nJan 1 x\n  Bank 1\n    Common Stock 1\n');
     expect(book.chart.filter((a) => a.id === "cash")).toEqual([
-      { id: "cash", name: "Cash", type: "asset", normal: "debit", group: "current-assets", aliases: ["Bank"] },
+      { id: "cash", name: "Cash", type: "asset", normal: "debit", group: "cash", aliases: ["Bank"] },
     ]);
     expect(book.entries[0]!.lines[0]!.account).toBe("cash");
+  });
+
+  it("reads the group option, and keeps a redefined account's group while it suits the type", () => {
+    const { book, diagnostics } = read(
+      `account "Delivery Vans" asset group Property-Plant-Equipment
+account "Notes Payable" liability group long-term-liabilities
+account "Supplies" asset alias "Stores"
+account "Petty Cash" expense
+`,
+    );
+    expect(diagnostics).toEqual([]);
+    const byId = (id: string) => book.chart.find((a) => a.id === id);
+    expect(byId("delivery-vans")).toMatchObject({ group: "property-plant-equipment" });
+    expect(byId("notes-payable")).toMatchObject({ group: "long-term-liabilities" });
+    expect(byId("supplies")).toMatchObject({ group: "current-assets", aliases: ["Stores"] });
+    expect(byId("petty-cash")!.group).toBeUndefined();
+  });
+
+  it("flags a group that doesn't exist or doesn't suit the type", () => {
+    const text = `account "Vans" asset group vehicles
+account "Loan" liability group current-assets
+`;
+    const r = read(text);
+    expect(r.diagnostics.map((d) => [d.code, slice(text, d.target.source)])).toEqual([
+      ["unreadable-line", 'account "Vans" asset group vehicles'],
+      ["unreadable-line", 'account "Loan" liability group current-assets'],
+    ]);
+    expect(r.diagnostics[1]!.message).toBe(
+      `"current-assets" isn't a group for liability accounts. The groups are current-liabilities, short-term-debt, long-term-liabilities.`,
+    );
+    expect(codes(`account "Vans" asset group
+`)).toEqual(["unreadable-line"]);
   });
 
   it("gives a new account a unique id", () => {

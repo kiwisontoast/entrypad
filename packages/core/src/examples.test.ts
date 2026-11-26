@@ -4,6 +4,7 @@ import { samples } from "../../../examples/generate.ts";
 import type { Expected } from "../../../examples/generate.ts";
 import { diagnose } from "./diagnose.js";
 import { parse } from "./parse/parse.js";
+import { balanceSheet, incomeStatement, retainedEarnings, trialBalance } from "./statements.js";
 import { equation, ledger } from "./views.js";
 
 const dir = new URL("../../../examples/", import.meta.url);
@@ -72,5 +73,57 @@ describe.each(samples().map((s) => [s.slug, s] as const))("sample book %s", (slu
       equity: cents(expected.equation.equity),
       netIncome: cents(expected.equation.netIncome),
     });
+  });
+
+  const allCents = (figures: Record<string, string>) => Object.fromEntries(Object.entries(figures).map(([k, v]) => [k, cents(v)]));
+
+  it("has the expected trial balance, account by account", () => {
+    const tb = trialBalance(book);
+    expect(tb.balanced).toBe(true);
+    expect({ debits: tb.debits, credits: tb.credits }).toEqual({ debits: cents(expected.trialBalance.debits), credits: cents(expected.trialBalance.credits) });
+    const rows = Object.fromEntries(tb.rows.map((r) => [r.account.name, r.debit ? { debit: r.debit } : { credit: r.credit }]));
+    const want = Object.fromEntries(
+      Object.entries(expected.trialBalance.rows).map(([name, row]) => [name, "debit" in row ? { debit: cents(row.debit) } : { credit: cents(row.credit) }]),
+    );
+    expect(rows).toEqual(want);
+  });
+
+  it("has the expected income statement", () => {
+    const is = incomeStatement(book);
+    expect({
+      revenue: is.revenue.total,
+      costOfSales: is.costOfSales.total,
+      grossProfit: is.grossProfit,
+      operatingExpenses: is.operatingExpenses.total,
+      operatingIncome: is.operatingIncome,
+      otherExpenses: is.otherExpenses.total,
+      incomeBeforeTaxes: is.incomeBeforeTaxes,
+      incomeTaxes: is.incomeTaxes.total,
+      netIncome: is.netIncome,
+    }).toEqual(allCents(expected.incomeStatement));
+    expect(is.otherRevenue.total).toBe(0);
+  });
+
+  it("has the expected statement of retained earnings", () => {
+    expect(retainedEarnings(book)).toEqual(allCents(expected.retainedEarnings));
+  });
+
+  it("has the expected balance sheet", () => {
+    const bs = balanceSheet(book);
+    const section = (sections: typeof bs.assets, id: string) => sections.find((s) => s.id === id)?.total ?? 0;
+    expect(bs.balanced).toBe(true);
+    for (const s of bs.assets) expect(["current-assets", "property-plant-equipment"]).toContain(s.id);
+    expect(bs.liabilities.map((s) => s.id)).toEqual(["current-liabilities"]);
+    expect({
+      currentAssets: section(bs.assets, "current-assets"),
+      propertyPlantEquipment: section(bs.assets, "property-plant-equipment"),
+      totalAssets: bs.totalAssets,
+      currentLiabilities: section(bs.liabilities, "current-liabilities"),
+      totalLiabilities: bs.totalLiabilities,
+      contributedCapital: bs.contributedCapital.total,
+      retainedEarnings: bs.retainedEarnings,
+      totalEquity: bs.totalEquity,
+      totalLiabilitiesAndEquity: bs.totalLiabilitiesAndEquity,
+    }).toEqual(allCents(expected.balanceSheet));
   });
 });

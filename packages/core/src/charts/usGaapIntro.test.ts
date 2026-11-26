@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { isGroupFor } from "../groups.js";
 import { usGaapIntroChart } from "./usGaapIntro.js";
 
 describe("usGaapIntroChart", () => {
   const ids = usGaapIntroChart.map((a) => a.id);
 
   it("has about 40 accounts with unique ids", () => {
-    expect(ids.length).toBe(40);
+    expect(ids.length).toBe(42);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("puts every account in a statement group that suits its type", () => {
+    for (const a of usGaapIntroChart) expect(isGroupFor(a.type, a.group), a.id).toBe(true);
   });
 
   it("uses ids that are safe as element ids", () => {

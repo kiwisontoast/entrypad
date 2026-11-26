@@ -3,7 +3,7 @@
  * businesses. Run it with `node examples/generate.ts` from the repo root.
  *
  * Each book comes with `<name>.expected.json`: its account balances, trial
- * balance totals and accounting equation, worked out here with plain
+ * balance, accounting equation and financial statements, worked out with plain
  * arithmetic on integer cents. Nothing in this file uses Entrypad's own code,
  * so the golden tests compare the parser and the derived views against an
  * independent calculation. The figures are written as dollars so they can be
@@ -15,38 +15,58 @@ import { fileURLToPath } from "node:url";
 type Kind = "asset" | "liability" | "equity" | "revenue" | "expense";
 type Normal = "debit" | "credit";
 
-/** The accounts the samples use, with the type and normal balance an accountant would give them. */
-const ACCOUNTS: Record<string, { kind: Kind; normal: Normal }> = {
-  Cash: { kind: "asset", normal: "debit" },
-  "Accounts Receivable": { kind: "asset", normal: "debit" },
-  Inventory: { kind: "asset", normal: "debit" },
-  Supplies: { kind: "asset", normal: "debit" },
-  "Prepaid Rent": { kind: "asset", normal: "debit" },
-  "Prepaid Insurance": { kind: "asset", normal: "debit" },
-  Equipment: { kind: "asset", normal: "debit" },
-  "Accumulated Depreciation, Equipment": { kind: "asset", normal: "credit" },
-  "Accounts Payable": { kind: "liability", normal: "credit" },
-  "Notes Payable": { kind: "liability", normal: "credit" },
-  "Wages Payable": { kind: "liability", normal: "credit" },
-  "Interest Payable": { kind: "liability", normal: "credit" },
-  "Utilities Payable": { kind: "liability", normal: "credit" },
-  "Income Taxes Payable": { kind: "liability", normal: "credit" },
-  "Unearned Revenue": { kind: "liability", normal: "credit" },
-  "Common Stock": { kind: "equity", normal: "credit" },
-  "Retained Earnings": { kind: "equity", normal: "credit" },
-  Dividends: { kind: "equity", normal: "debit" },
-  "Sales Revenue": { kind: "revenue", normal: "credit" },
-  "Service Revenue": { kind: "revenue", normal: "credit" },
-  "Cost of Goods Sold": { kind: "expense", normal: "debit" },
-  "Wages Expense": { kind: "expense", normal: "debit" },
-  "Rent Expense": { kind: "expense", normal: "debit" },
-  "Supplies Expense": { kind: "expense", normal: "debit" },
-  "Insurance Expense": { kind: "expense", normal: "debit" },
-  "Utilities Expense": { kind: "expense", normal: "debit" },
-  "Depreciation Expense": { kind: "expense", normal: "debit" },
-  "Advertising Expense": { kind: "expense", normal: "debit" },
-  "Interest Expense": { kind: "expense", normal: "debit" },
-  "Income Tax Expense": { kind: "expense", normal: "debit" },
+/**
+ * Where an account goes on the statements, as an accountant would present
+ * it. Notes Payable is a short-term bank loan or note: a current liability
+ * on the balance sheet, and borrowing on the cash flow statement.
+ */
+type Place =
+  | "cash"
+  | "current-asset"
+  | "fixed-asset"
+  | "current-liability"
+  | "borrowing"
+  | "stock"
+  | "retained-earnings"
+  | "dividends"
+  | "revenue"
+  | "cost-of-sales"
+  | "operating-expense"
+  | "other-expense"
+  | "income-tax";
+
+/** The accounts the samples use, with the type, normal balance and statement place an accountant would give them. */
+const ACCOUNTS: Record<string, { kind: Kind; normal: Normal; place: Place }> = {
+  Cash: { kind: "asset", normal: "debit", place: "cash" },
+  "Accounts Receivable": { kind: "asset", normal: "debit", place: "current-asset" },
+  Inventory: { kind: "asset", normal: "debit", place: "current-asset" },
+  Supplies: { kind: "asset", normal: "debit", place: "current-asset" },
+  "Prepaid Rent": { kind: "asset", normal: "debit", place: "current-asset" },
+  "Prepaid Insurance": { kind: "asset", normal: "debit", place: "current-asset" },
+  Equipment: { kind: "asset", normal: "debit", place: "fixed-asset" },
+  "Accumulated Depreciation, Equipment": { kind: "asset", normal: "credit", place: "fixed-asset" },
+  "Accounts Payable": { kind: "liability", normal: "credit", place: "current-liability" },
+  "Notes Payable": { kind: "liability", normal: "credit", place: "borrowing" },
+  "Wages Payable": { kind: "liability", normal: "credit", place: "current-liability" },
+  "Interest Payable": { kind: "liability", normal: "credit", place: "current-liability" },
+  "Utilities Payable": { kind: "liability", normal: "credit", place: "current-liability" },
+  "Income Taxes Payable": { kind: "liability", normal: "credit", place: "current-liability" },
+  "Unearned Revenue": { kind: "liability", normal: "credit", place: "current-liability" },
+  "Common Stock": { kind: "equity", normal: "credit", place: "stock" },
+  "Retained Earnings": { kind: "equity", normal: "credit", place: "retained-earnings" },
+  Dividends: { kind: "equity", normal: "debit", place: "dividends" },
+  "Sales Revenue": { kind: "revenue", normal: "credit", place: "revenue" },
+  "Service Revenue": { kind: "revenue", normal: "credit", place: "revenue" },
+  "Cost of Goods Sold": { kind: "expense", normal: "debit", place: "cost-of-sales" },
+  "Wages Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Rent Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Supplies Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Insurance Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Utilities Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Depreciation Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Advertising Expense": { kind: "expense", normal: "debit", place: "operating-expense" },
+  "Interest Expense": { kind: "expense", normal: "debit", place: "other-expense" },
+  "Income Tax Expense": { kind: "expense", normal: "debit", place: "income-tax" },
 };
 
 /** Other names the shorthand may use for an account, to exercise aliases. */
@@ -310,8 +330,36 @@ export interface Expected {
   entries: number;
   /** Closing balance of every account used, on its normal side; a minus sign means an abnormal balance. */
   balances: Record<string, string>;
-  trialBalance: { debits: string; credits: string };
+  trialBalance: {
+    debits: string;
+    credits: string;
+    /** Each account with a balance, in the column it falls in. */
+    rows: Record<string, { debit: string } | { credit: string }>;
+  };
   equation: { assets: string; liabilities: string; equity: string; netIncome: string };
+  incomeStatement: {
+    revenue: string;
+    costOfSales: string;
+    grossProfit: string;
+    operatingExpenses: string;
+    operatingIncome: string;
+    otherExpenses: string;
+    incomeBeforeTaxes: string;
+    incomeTaxes: string;
+    netIncome: string;
+  };
+  retainedEarnings: { beginning: string; netIncome: string; dividends: string; ending: string };
+  balanceSheet: {
+    currentAssets: string;
+    propertyPlantEquipment: string;
+    totalAssets: string;
+    currentLiabilities: string;
+    totalLiabilities: string;
+    contributedCapital: string;
+    retainedEarnings: string;
+    totalEquity: string;
+    totalLiabilitiesAndEquity: string;
+  };
 }
 
 /** Works out the figures with plain sums, independently of Entrypad. */
@@ -338,31 +386,79 @@ function expectedFor(b: Business): Expected {
 
   const balances: Record<string, string> = {};
   const totals = { asset: 0, liability: 0, equity: 0, revenue: 0, expense: 0 };
+  const byPlace = new Map<Place, number>();
+  const rows: Expected["trialBalance"]["rows"] = {};
   let tbDebits = 0;
   let tbCredits = 0;
   for (const account of Object.keys(ACCOUNTS)) {
     if (!debit.has(account) && !credit.has(account)) continue;
-    const { kind, normal } = ACCOUNTS[account]!;
+    const { kind, normal, place } = ACCOUNTS[account]!;
     const net = (debit.get(account) ?? 0) - (credit.get(account) ?? 0);
     balances[account] = dollars(normal === "debit" ? net : -net);
-    if (net > 0) tbDebits += net;
-    else tbCredits -= net;
+    if (net > 0) {
+      tbDebits += net;
+      rows[account] = { debit: dollars(net) };
+    } else if (net < 0) {
+      tbCredits -= net;
+      rows[account] = { credit: dollars(-net) };
+    }
     // Debit-minus-credit for assets and expenses, credit-minus-debit for the rest.
-    totals[kind] += kind === "asset" || kind === "expense" ? net : -net;
+    const signed = kind === "asset" || kind === "expense" ? net : -net;
+    totals[kind] += signed;
+    byPlace.set(place, (byPlace.get(place) ?? 0) + signed);
   }
   const netIncome = totals.revenue - totals.expense;
+  const at = (place: Place) => byPlace.get(place) ?? 0;
+
+  // The samples have no closing entries, so the statements read straight off the balances.
+  const grossProfit = at("revenue") - at("cost-of-sales");
+  const operatingIncome = grossProfit - at("operating-expense");
+  const incomeBeforeTaxes = operatingIncome - at("other-expense");
+  if (incomeBeforeTaxes - at("income-tax") !== netIncome) throw new Error(`${b.name}: the income statement doesn't reach net income`);
+  const beginningRE = (b.opening ?? []).filter(([a]) => name(a) === "Retained Earnings").reduce((sum, [, c]) => sum + c, 0);
+  // Dividends carry a debit balance, so their credit-minus-debit total is negative.
+  const dividends = -at("dividends");
+  const endingRE = beginningRE + netIncome - dividends;
+  const currentAssets = at("cash") + at("current-asset");
+  const totalAssets = currentAssets + at("fixed-asset");
+  const currentLiabilities = at("current-liability") + at("borrowing");
+  const totalEquity = at("stock") + endingRE;
+  if (totalAssets !== currentLiabilities + totalEquity) throw new Error(`${b.name}: the balance sheet doesn't balance`);
   const last = DAYS_IN[b.month - 1]!;
   return {
     book: b.name,
     period: { start: `${b.year}-${pad2(b.month)}-01`, end: `${b.year}-${pad2(b.month)}-${last}` },
     entries: b.txns.length + (b.opening ? 1 : 0),
     balances,
-    trialBalance: { debits: dollars(tbDebits), credits: dollars(tbCredits) },
+    trialBalance: { debits: dollars(tbDebits), credits: dollars(tbCredits), rows },
     equation: {
       assets: dollars(totals.asset),
       liabilities: dollars(totals.liability),
       equity: dollars(totals.equity + netIncome),
       netIncome: dollars(netIncome),
+    },
+    incomeStatement: {
+      revenue: dollars(at("revenue")),
+      costOfSales: dollars(at("cost-of-sales")),
+      grossProfit: dollars(grossProfit),
+      operatingExpenses: dollars(at("operating-expense")),
+      operatingIncome: dollars(operatingIncome),
+      otherExpenses: dollars(at("other-expense")),
+      incomeBeforeTaxes: dollars(incomeBeforeTaxes),
+      incomeTaxes: dollars(at("income-tax")),
+      netIncome: dollars(netIncome),
+    },
+    retainedEarnings: { beginning: dollars(beginningRE), netIncome: dollars(netIncome), dividends: dollars(dividends), ending: dollars(endingRE) },
+    balanceSheet: {
+      currentAssets: dollars(currentAssets),
+      propertyPlantEquipment: dollars(at("fixed-asset")),
+      totalAssets: dollars(totalAssets),
+      currentLiabilities: dollars(currentLiabilities),
+      totalLiabilities: dollars(currentLiabilities),
+      contributedCapital: dollars(at("stock")),
+      retainedEarnings: dollars(endingRE),
+      totalEquity: dollars(totalEquity),
+      totalLiabilitiesAndEquity: dollars(currentLiabilities + totalEquity),
     },
   };
 }

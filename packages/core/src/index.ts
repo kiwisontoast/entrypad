@@ -27,6 +27,18 @@ export type { AmountResult } from "./parse/amount.js";
 export { balances, isBalanced } from "./balances.js";
 export { equation, ledger } from "./views.js";
 export type { AccountLedger, Equation, LedgerRow } from "./views.js";
+export { balanceSheet, incomeStatement, retainedEarnings, trialBalance } from "./statements.js";
+export type {
+  BalanceSheet,
+  IncomeStatement,
+  RetainedEarningsStatement,
+  StatementLine,
+  StatementSection,
+  TrialBalance,
+  TrialBalanceRow,
+} from "./statements.js";
+export { accountGroups, defaultGroups, effectiveGroup, groupLabels, groupsFor, isGroupFor } from "./groups.js";
+export type { AccountGroup } from "./groups.js";
 export type { AccountBalance, Posting } from "./balances.js";
 export { formatCents, toCents } from "./money.js";
 export { usGaapIntroChart } from "./charts/usGaapIntro.js";

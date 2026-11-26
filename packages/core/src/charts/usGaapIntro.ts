@@ -24,19 +24,19 @@ const liability = (id: string, name: string, group: string, extra: Partial<Accou
   group,
   ...extra,
 });
-const equity = (id: string, name: string, normal: Account["normal"] = "credit"): Account => ({
+const equity = (id: string, name: string, group: string, normal: Account["normal"] = "credit"): Account => ({
   id,
   name,
   type: "equity",
   normal,
-  group: "equity",
+  group,
 });
-const revenue = (id: string, name: string): Account => ({
+const revenue = (id: string, name: string, group = "revenue"): Account => ({
   id,
   name,
   type: "revenue",
   normal: "credit",
-  group: "revenue",
+  group,
 });
 const expense = (id: string, name: string, group = "operating-expenses"): Account => ({
   id,
@@ -48,8 +48,8 @@ const expense = (id: string, name: string, group = "operating-expenses"): Accoun
 
 /** The default chart of accounts for introductory financial accounting, US GAAP labels. */
 export const usGaapIntroChart: readonly Account[] = [
-  asset("cash", "Cash", "current-assets"),
-  asset("petty-cash", "Petty Cash", "current-assets"),
+  asset("cash", "Cash", "cash"),
+  asset("petty-cash", "Petty Cash", "cash"),
   asset("accounts-receivable", "Accounts Receivable", "current-assets", {
     aliases: ["A/R", "AR", "Receivables"],
   }),
@@ -83,7 +83,7 @@ export const usGaapIntroChart: readonly Account[] = [
   liability("accounts-payable", "Accounts Payable", "current-liabilities", {
     aliases: ["A/P", "AP", "Payables"],
   }),
-  liability("notes-payable", "Notes Payable", "current-liabilities"),
+  liability("notes-payable", "Notes Payable", "short-term-debt"),
   liability("wages-payable", "Wages Payable", "current-liabilities", { aliases: ["Salaries Payable"] }),
   liability("interest-payable", "Interest Payable", "current-liabilities"),
   liability("income-taxes-payable", "Income Taxes Payable", "current-liabilities"),
@@ -91,13 +91,16 @@ export const usGaapIntroChart: readonly Account[] = [
   liability("unearned-revenue", "Unearned Revenue", "current-liabilities", {
     aliases: ["Deferred Revenue"],
   }),
-  equity("common-stock", "Common Stock"),
-  equity("additional-paid-in-capital", "Additional Paid-in Capital"),
-  equity("retained-earnings", "Retained Earnings"),
-  equity("dividends", "Dividends", "debit"),
+  liability("bonds-payable", "Bonds Payable", "long-term-liabilities"),
+  equity("common-stock", "Common Stock", "contributed-capital"),
+  equity("additional-paid-in-capital", "Additional Paid-in Capital", "contributed-capital"),
+  equity("retained-earnings", "Retained Earnings", "retained-earnings"),
+  equity("dividends", "Dividends", "dividends", "debit"),
+  // Closing entries can pass revenue and expenses through here on the way to retained earnings.
+  equity("income-summary", "Income Summary", "retained-earnings"),
   revenue("service-revenue", "Service Revenue"),
   revenue("sales-revenue", "Sales Revenue"),
-  revenue("interest-revenue", "Interest Revenue"),
+  revenue("interest-revenue", "Interest Revenue", "other-revenue"),
   expense("cost-of-goods-sold", "Cost of Goods Sold", "cost-of-sales"),
   expense("wages-expense", "Wages Expense"),
   expense("rent-expense", "Rent Expense"),

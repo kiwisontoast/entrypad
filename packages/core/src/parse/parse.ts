@@ -1,4 +1,5 @@
 import { matchAccount } from "../accounts.js";
+import { groupsFor, isGroupFor } from "../groups.js";
 import { usGaapIntroChart } from "../charts/usGaapIntro.js";
 import type { Diagnostic, DiagnosticCode } from "../diagnostics.js";
 import { defaultSettings, parseSettingText, setSetting, settingSpec } from "../settings.js";
@@ -145,7 +146,8 @@ function readBookLines(lines: ClassifiedLine[], book: Book, settings: EntrypadSe
 }
 
 const ACCOUNT_TYPES: readonly AccountType[] = ["asset", "liability", "equity", "revenue", "expense"];
-const ACCOUNT_FORM = 'Write it as: account "Name" asset, optionally followed by contra "Account", alias "Name" or normal debit';
+const ACCOUNT_FORM =
+  'Write it as: account "Name" asset, optionally followed by contra "Account", alias "Name", normal debit or group current-assets';
 
 export function accountId(name: string, chart: readonly Account[]): string {
   const base =
@@ -187,6 +189,7 @@ function readAccountLines(lines: ClassifiedLine[], book: Book, settings: Entrypa
     let normal: Account["normal"] | undefined;
     let contra: Span | undefined;
     let contraName: string | undefined;
+    let group: string | undefined;
     let ok = true;
     for (let i = 2; i < tokens.length; i += 2) {
       const option = tokens[i]!.text.toLowerCase();
@@ -195,20 +198,31 @@ function readAccountLines(lines: ClassifiedLine[], book: Book, settings: Entrypa
       else if (option === "alias") aliases.push(value.text);
       else if (option === "contra") [contraName, contra] = [value.text, value.span];
       else if (option === "normal" && /^(debit|credit)$/i.test(value.text)) normal = value.text.toLowerCase() as Account["normal"];
+      else if (option === "group") group = value.text.toLowerCase();
       else ok = false;
     }
     if (!ok) {
       fail();
       continue;
     }
+    if (group !== undefined && !isGroupFor(type, group)) {
+      report({
+        code: "unreadable-line",
+        message: `"${group}" isn't a group for ${type} accounts. The groups are ${groupsFor(type).join(", ")}.`,
+        target: { source },
+      });
+      continue;
+    }
 
     const existing = matchAccount(name, book.chart, namesOnly);
+    // A redefined account keeps its group unless the line names one or the group doesn't suit the new type.
+    group ??= isGroupFor(type, existing?.group) ? existing!.group : undefined;
     const account: Account = {
       id: existing?.id ?? accountId(name, book.chart),
       name,
       type,
       normal: normal ?? (type === "asset" || type === "expense" ? "debit" : "credit"),
-      ...(existing?.group !== undefined && { group: existing.group }),
+      ...(group !== undefined && { group }),
       ...(aliases.length && { aliases }),
     };
     book.chart = existing ? book.chart.map((a) => (a === existing ? account : a)) : [...book.chart, account];
