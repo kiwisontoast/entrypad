@@ -298,6 +298,7 @@ function writeShorthand(b: Business): string {
     `# ${b.name}, ${monthName} ${b.year}`,
     `# ${b.intro}`,
     `book "${b.name}" period ${b.year}-${pad2(b.month)}-01..${b.year}-${pad2(b.month)}-${last}`,
+    ...assetLines(b),
     "",
   ];
   if (b.opening) {
@@ -379,6 +380,8 @@ export interface Expected {
       operating: string;
     };
   };
+  /** Depreciation schedules of the book's assets: the months of the book's period, and every year of each asset's life. */
+  schedules?: ExpectedSchedule[];
 }
 
 type Section = "operating" | "investing" | "financing";
@@ -550,6 +553,105 @@ function expectedFor(b: Business): Expected {
   };
 }
 
+/**
+ * Depreciable assets, one per book, each matching the depreciation entry the
+ * book already has: the bakery's ovens (12,000 over five years, 200 a month),
+ * the bike shop's workshop tools (6,000 over five years, in service since
+ * March 2025, so the 1,200 opening balance is twelve months), and the
+ * consultancy's laptops (4,800 over three years, 133.33 a month).
+ */
+interface AssetSpec {
+  name: string;
+  account: string;
+  cost: number;
+  salvage: number;
+  lifeMonths: number;
+  /** ISO date placed in service. */
+  from: string;
+}
+
+const ASSETS: Record<string, AssetSpec[]> = {
+  "sunrise-bakery": [{ name: "Ovens", account: "Equipment", cost: $(12_000), salvage: 0, lifeMonths: 60, from: "2026-01-03" }],
+  "spoke-and-chain-bikes": [{ name: "Workshop tools", account: "Equipment", cost: $(6_000), salvage: 0, lifeMonths: 60, from: "2025-03-01" }],
+  "northfield-advisory": [{ name: "Laptops", account: "Equipment", cost: $(4_800), salvage: 0, lifeMonths: 36, from: "2026-04-02" }],
+};
+
+function assetLines(b: Business): string[] {
+  return (ASSETS[b.slug] ?? []).map(
+    (a) =>
+      `asset "${a.name}" account ${a.account} cost ${money(a.cost)} salvage ${money(a.salvage)} life ${a.lifeMonths / 12} years method straight-line from ${a.from}`,
+  );
+}
+
+interface ExpectedRow {
+  start: string;
+  end: string;
+  opening: string;
+  depreciation: string;
+  accumulated: string;
+  closing: string;
+}
+
+interface ExpectedSchedule {
+  asset: string;
+  method: string;
+  depreciable: string;
+  /** The schedule's rows for the months of the book's period. */
+  period: ExpectedRow[];
+  /** One row for each year of the asset's life, counted from its first month. */
+  years: ExpectedRow[];
+}
+
+const lastDay = (year: number, month: number) => (month === 2 && year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : DAYS_IN[month - 1]!);
+
+/**
+ * Straight-line schedules worked out by hand: the in-service month counts in
+ * full, each month takes cost less salvage over the life rounded down to the
+ * cent, and the last month takes what is left.
+ */
+function schedulesFor(b: Business): { schedules?: ExpectedSchedule[] } {
+  const assets = ASSETS[b.slug];
+  if (!assets?.length) return {};
+  const schedules = assets.map((a): ExpectedSchedule => {
+    const base = a.cost - a.salvage;
+    const each = Math.floor(base / a.lifeMonths);
+    const firstYear = +a.from.slice(0, 4);
+    const firstMonth = +a.from.slice(5, 7);
+    const months: { year: number; month: number; opening: number; depreciation: number; accumulated: number }[] = [];
+    let accumulated = 0;
+    for (let k = 0; k < a.lifeMonths; k++) {
+      const depreciation = k === a.lifeMonths - 1 ? base - each * (a.lifeMonths - 1) : each;
+      const opening = a.cost - accumulated;
+      accumulated += depreciation;
+      const index = firstMonth - 1 + k;
+      months.push({ year: firstYear + Math.floor(index / 12), month: (index % 12) + 1, opening, depreciation, accumulated });
+    }
+    const row = (group: typeof months): ExpectedRow => {
+      const first = group[0]!;
+      const last = group[group.length - 1]!;
+      const depreciation = group.reduce((s, m) => s + m.depreciation, 0);
+      return {
+        start: `${first.year}-${pad2(first.month)}-01`,
+        end: `${last.year}-${pad2(last.month)}-${pad2(lastDay(last.year, last.month))}`,
+        opening: dollars(first.opening),
+        depreciation: dollars(depreciation),
+        accumulated: dollars(last.accumulated),
+        closing: dollars(a.cost - last.accumulated),
+      };
+    };
+    const years: ExpectedRow[] = [];
+    for (let k = 0; k < months.length; k += 12) years.push(row(months.slice(k, k + 12)));
+    return {
+      asset: a.name,
+      method: "straight-line",
+      depreciable: dollars(base),
+      period: months.filter((m) => m.year === b.year && m.month === b.month).map((m) => row([m])),
+      years,
+    };
+  });
+  return { schedules };
+}
+
 export interface Sample {
   slug: string;
   text: string;
@@ -557,7 +659,7 @@ export interface Sample {
 }
 
 export function samples(): Sample[] {
-  return [bakery(), bikeShop(), consulting()].map((b) => ({ slug: b.slug, text: writeShorthand(b), expected: expectedFor(b) }));
+  return [bakery(), bikeShop(), consulting()].map((b) => ({ slug: b.slug, text: writeShorthand(b), expected: { ...expectedFor(b), ...schedulesFor(b) } }));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

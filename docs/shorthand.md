@@ -46,7 +46,7 @@ The parser reads the file one line at a time. Every line is one of these:
 | Blank | Nothing but spaces or tabs |
 | Comment | First non-space character is `#` or `;` |
 | Entry header | Starts at the first column with a date or `-` |
-| Directive | Starts at the first column with `book`, `open`, `account`, `show` or `set` followed by a space |
+| Directive | Starts at the first column with `book`, `open`, `account`, `asset`, `show` or `set` followed by a space |
 | Posting | Any other line that follows an entry header |
 
 Comments take up a whole line. There are no end-of-line comments, so a memo such as `Invoice #12` is read as written.
@@ -190,6 +190,33 @@ Without `contra` or `normal`, assets and expenses have a normal debit balance an
 
 Declaring an account whose name is already in the chart replaces that account's type and options rather than adding a second one, so `account "Cash" asset alias "Bank"` lets `Bank` reach Cash. The account keeps its group unless the line names another one or the new type doesn't allow it. A `contra` account that isn't in the chart is flagged `unknown-account`.
 
+### `asset`
+
+```
+asset "Ovens" account Equipment cost 12,000 salvage 0 life 5 years method straight-line from 2026-01-03
+asset "Delivery van" account Equipment cost 30,000 salvage 3,000 life 5 years method double-declining from 2026-01-01
+asset "Packaging line" account Equipment cost 50,000 salvage 2,000 units 400,000 from 2026-01-01 used 9,000 in Jan 2026
+```
+
+This records a depreciable asset, so that Entrypad can work out its depreciation schedule (see [Depreciation schedules](#depreciation-schedules)). The name is in quotes. The parts after it can come in any order:
+
+| Part | Meaning |
+| --- | --- |
+| `account <Account>` | The asset account it is carried in, e.g. Equipment. Required. |
+| `cost <amount>` | Its cost. Required. |
+| `salvage <amount>` | Its estimated salvage value. Optional; 0 if left out. |
+| `life <n> years` or `life <n> months` | Its useful life. Required for straight-line and double-declining. A fraction such as `2.5 years` is accepted when it comes to a whole number of months. |
+| `method <method>` | `straight-line`, `double-declining` or `units`. Optional: the method is straight-line unless `units` is given. |
+| `units <n>` | Units of production: the total units the asset is expected to produce (miles, machine hours, items). Giving it selects the `units` method. |
+| `used <n> in <month>` | Units of production: the units used in one month, with the month written `Jan 2026` or `2026-01`. Repeat it for each month. Without `in <month>`, the units count for the last month of the book's period. |
+| `from <date>` | The date it was placed in service, a complete date with a year. Required. |
+
+An account name runs up to the next part. Put it in double quotes if it contains one of the words `account`, `cost`, `salvage`, `life`, `method`, `units`, `used` or `from`. The account must be an asset account and not a contra account.
+
+An `asset` line posts nothing to the book. Depreciation entries are written as usual, and the `depreciation-mismatch` hint compares them with the schedule. The accumulated depreciation account is the contra account the chart gives the asset's account, so an asset carried in Equipment uses Accumulated Depreciation, Equipment. For an account you declare yourself, declare its accumulated depreciation account with `contra`.
+
+An `asset` line with a part that can't be read is flagged and left out of the book, so no schedule is drawn from a guess. An account name that isn't in the chart is kept as written and flagged `unknown-account`.
+
 ### `show`
 
 ```
@@ -304,6 +331,44 @@ The direct method lists each entry's cash under its section. The indirect method
 
 Both methods give the same operating total, and so the same net change in cash. An entry that doesn't move cash and doesn't affect net income, but involves an investing or financing account, such as land bought by issuing stock, is listed separately as a non-cash investing and financing activity.
 
+## Depreciation schedules
+
+Each asset's schedule has a row for every month of its useful life. A row gives the book value at the start of the month, the depreciation for the month, the accumulated depreciation and the book value at the end. The yearly view adds up each twelve months from the first month of depreciation, so year 1 of an asset placed in service in April 2026 runs from April 2026 to March 2027.
+
+The month the asset is placed in service is depreciated as a full month, whatever the day. With `schedules.firstMonth` set to `next-month`, depreciation starts the month after instead. This applies to straight-line and double-declining schedules; units of production follow the units used.
+
+### Methods
+
+- **Straight-line.** Cost less salvage, divided evenly over the months of the life.
+- **Double-declining balance.** Each year's depreciation is the book value at the start of that year times twice the straight-line rate (2 divided by the life in years), spread evenly over the year's months. Depreciation never takes the book value below salvage, and the final year takes it down to salvage exactly.
+- **Units of production.** Each month's depreciation is the units used that month times cost less salvage, divided by the total units expected. Once the units used reach the total, the asset is fully depreciated, and further use adds no depreciation. The schedule runs up to the last month with units used.
+
+The delivery van in the example above (cost 30,000, salvage 3,000, five years, double-declining) has a rate of 40% a year:
+
+| Year | Book value at start | Depreciation | Accumulated | Book value at end |
+| --- | --- | --- | --- | --- |
+| 1 | 30,000.00 | 12,000.00 | 12,000.00 | 18,000.00 |
+| 2 | 18,000.00 | 7,200.00 | 19,200.00 | 10,800.00 |
+| 3 | 10,800.00 | 4,320.00 | 23,520.00 | 6,480.00 |
+| 4 | 6,480.00 | 2,592.00 | 26,112.00 | 3,888.00 |
+| 5 | 3,888.00 | 888.00 | 27,000.00 | 3,000.00 |
+
+The packaging line depreciates 0.12 a unit (48,000 over 400,000 units), so January's 9,000 units come to 1,080.
+
+### Rounding
+
+Schedules are worked out in whole cents with integer arithmetic, and every schedule adds up to exactly cost less salvage over the asset's life.
+
+- Straight-line: each month takes the monthly amount rounded down to the cent, and the last month of the life takes what is left. Laptops costing 4,800 over three years depreciate 133.33 a month for 35 months and 133.45 in the last.
+- Double-declining balance: each year's amount is rounded to the nearest cent, with half a cent rounding up, then spread over its months the same way.
+- Units of production: each month's amount is rounded to the nearest cent, with half a cent rounding up. The month in which the units used reach the total takes whatever is left.
+
+### Checking depreciation entries
+
+The `depreciation-mismatch` hint compares the credits to each accumulated depreciation account with the schedules of the assets that use it. It works through the book's period month by month, up to the month of the latest entry. A month with an entry crediting the account is compared with the scheduled depreciation for that month and for any earlier months since the previous such entry, so monthly, quarterly and yearly depreciation entries can all be checked. Opening balances and entries tagged `[closing]` are left out. Scheduled depreciation after the last such entry is reported as not recorded.
+
+When the entry has one debit and one credit, the hint offers to change it to the scheduled amount. When nothing is recorded, it offers to add an adjusting entry debiting Depreciation Expense. The opening balance of an accumulated depreciation account isn't compared with the schedule.
+
 ## Settings
 
 Every rule on this page that involves a choice has a setting, and the default is the behaviour described above. You can change any of them in the editor's settings, or for one book with a `set` line.
@@ -331,6 +396,7 @@ Every rule on this page that involves a choice has a setting, and the default is
 | `autofix.inferBlankAmount` | `on` | The one blank amount in an entry is filled in. When off, it stays blank and the entry is flagged as unbalanced. |
 | `diagnostics.<code>` | as listed under [Errors](#errors-and-how-the-parser-recovers) | The severity of each check: `error`, `warning`, `hint` or `off`. |
 | `cashFlow.inferSections` | `on` | An untagged entry that moves cash is placed in a cash flow section by the accounts on its other side. When off, it is operating. |
+| `schedules.firstMonth` | `full-month` | The month an asset is placed in service is depreciated in full, or depreciation starts the month after (`next-month`). |
 | `hledger.importMatch` | `last-segment` | Imported account names match by their last part, or by the `full-name`. |
 | `hledger.keepUnsupportedAsComments` | `on` | Unused imported directives are kept as comments rather than dropped. |
 | `hledger.exportAccountNames` | `type-prefixed` | Exported names look like `assets:cash`, or `plain` like `Cash`. |
@@ -386,7 +452,7 @@ month-num      = digit , [ digit ] ;
 day            = digit , [ digit ] ;
 
 (* Directives start at the first column. *)
-directive      = book | open | account-decl | show | set ;
+directive      = book | open | account-decl | asset-decl | show | set ;
 book           = "book" , ws1 , quoted , [ ws1 , "period" , ws1 , full-date , ".." , full-date ] ;
 open           = "open" , ws1 , account , ws1 , [ side , ws1 ] , amount ;
 account-decl   = "account" , ws1 , quoted , ws1 , type , { ws1 , account-option } ;
@@ -401,6 +467,18 @@ group-name     = "cash" | "current-assets" | "investments" | "property-plant-equ
                | "contributed-capital" | "retained-earnings" | "dividends"
                | "revenue" | "other-revenue"
                | "cost-of-sales" | "operating-expenses" | "other-expenses" | "income-taxes" ;
+asset-decl     = "asset" , ws1 , quoted , { ws1 , asset-part } ;
+asset-part     = "account" , ws1 , account        (* a plain name runs up to the next part *)
+               | "cost" , ws1 , amount
+               | "salvage" , ws1 , amount
+               | "life" , ws1 , life-count , ws1 , ( "year" | "years" | "month" | "months" )
+               | "method" , ws1 , ( "straight-line" | "double-declining" | "units" )
+               | "units" , ws1 , count
+               | "used" , ws1 , count , [ ws1 , "in" , ws1 , month ]
+               | "from" , ws1 , full-date ;
+life-count     = digit , { digit } , [ "." , digit , { digit } ] ;
+count          = digit , { digit | "," } , [ "k" ] ;
+month          = year , "-" , month-num | month-name , ws1 , year ;
 show           = "show" , ws1 , visual , [ { ws } , ":" , { ws } , option , { "," , { ws } , option } ] ;
 visual         = "entry-cards" | "t-accounts" | "equation" | "statement-flow"
                | "cash-flow" | "trial-balance" | "schedule" ;
@@ -439,6 +517,7 @@ Diagnostics from the book rules (see `diagnose()`):
 | `inferred-amount` | hint | A blank amount was filled in; the hint shows the value |
 | `outside-period` | hint | An entry's date falls outside the book's period |
 | `inferred-cash-section` | hint | An entry moves cash but has no `operating`, `investing` or `financing` tag, so its cash flow section was inferred |
+| `depreciation-mismatch` | hint | The depreciation credited to an accumulated depreciation account differs from the schedules of its assets, or scheduled depreciation isn't recorded (see [Checking depreciation entries](#checking-depreciation-entries)) |
 
 An entry with fewer than two lines, or with more than one blank amount, is reported only under its own code, not as unbalanced as well. `odd-side` looks at revenue and expense accounts posted against their normal side, and accepts them in an entry tagged `[closing]`.
 

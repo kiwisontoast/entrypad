@@ -142,5 +142,48 @@
       },
       "operating": "1,510.44"
     }
-  }
+  },
+  "schedules": [
+    {
+      "asset": "Laptops",
+      "method": "straight-line",
+      "depreciable": "4,800.00",
+      "period": [
+        {
+          "start": "2026-04-01",
+          "end": "2026-04-30",
+          "opening": "4,800.00",
+          "depreciation": "133.33",
+          "accumulated": "133.33",
+          "closing": "4,666.67"
+        }
+      ],
+      "years": [
+        {
+          "start": "2026-04-01",
+          "end": "2027-03-31",
+          "opening": "4,800.00",
+          "depreciation": "1,599.96",
+          "accumulated": "1,599.96",
+          "closing": "3,200.04"
+        },
+        {
+          "start": "2027-04-01",
+          "end": "2028-03-31",
+          "opening": "3,200.04",
+          "depreciation": "1,599.96",
+          "accumulated": "3,199.92",
+          "closing": "1,600.08"
+        },
+        {
+          "start": "2028-04-01",
+          "end": "2029-03-31",
+          "opening": "1,600.08",
+          "depreciation": "1,600.08",
+          "accumulated": "4,800.00",
+          "closing": "0.00"
+        }
+      ]
+    }
+  ]
 }

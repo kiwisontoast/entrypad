@@ -6,7 +6,7 @@ import type { SourceLine } from "./text.js";
 
 export type LineKind = "blank" | "comment" | "directive" | "header" | "posting";
 
-export const DIRECTIVES = ["book", "open", "account", "show", "set"] as const;
+export const DIRECTIVES = ["book", "open", "account", "asset", "show", "set"] as const;
 export type DirectiveKeyword = (typeof DIRECTIVES)[number];
 
 export interface ClassifiedLine extends SourceLine {

@@ -4,6 +4,7 @@ import { cashFlowSections, cashSections } from "./cashflow.js";
 import type { Diagnostic } from "./diagnostics.js";
 import { formatAmount } from "./format.js";
 import { runRules } from "./rules.js";
+import { depreciationMismatch } from "./schedules.js";
 import type { Rule, RuleFinding } from "./rules.js";
 import { defaultSettings } from "./settings.js";
 import type { EntrypadSettings } from "./settings.js";
@@ -295,6 +296,7 @@ export const bookRules: readonly Rule<Book>[] = [
   inferredAmount,
   outsidePeriod,
   inferredCashSection,
+  depreciationMismatch,
 ];
 
 /**

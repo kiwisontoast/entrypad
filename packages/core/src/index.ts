@@ -1,8 +1,10 @@
 export type {
   Account,
   AccountType,
+  Asset,
   Book,
   BookSettings,
+  DepreciationMethod,
   Entry,
   EntryTag,
   Line,
@@ -12,7 +14,7 @@ export type {
 } from "./types.js";
 export { editDistance, matchAccount, suggestAccounts } from "./accounts.js";
 export { entryTags, OPENING_ENTRY_ID, parse, visuals } from "./parse/parse.js";
-export { format, formatAmount, formatDate, formatEntry, formatOpening, formatShow, quoteName } from "./format.js";
+export { format, formatAmount, formatAsset, formatDate, formatEntry, formatOpening, formatShow, quoteName } from "./format.js";
 export type { EntryContext, FormatOptions } from "./format.js";
 export { applyChanges, bookChanges, editEntry, entryChanges } from "./edit.js";
 export { bookRules, diagnose } from "./diagnose.js";
@@ -52,6 +54,9 @@ export type {
 } from "./cashflow.js";
 export { accountGroups, defaultGroups, effectiveGroup, groupLabels, groupsFor, isGroupFor } from "./groups.js";
 export type { AccountGroup } from "./groups.js";
+export { contraAccount, depreciationMismatch, depreciationSchedule, depreciationSchedules } from "./schedules.js";
+export type { DepreciationSchedule, ScheduleGrain, ScheduleOptions, ScheduleRow } from "./schedules.js";
+export { assetKeywords, depreciationMethods } from "./parse/asset.js";
 export type { AccountBalance, Posting } from "./balances.js";
 export { formatCents, toCents } from "./money.js";
 export { usGaapIntroChart } from "./charts/usGaapIntro.js";

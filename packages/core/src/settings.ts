@@ -54,6 +54,10 @@ export interface EntrypadSettings {
     suggestNearestAccount: boolean;
   };
   diagnostics: Record<DiagnosticCode, Severity>;
+  schedules: {
+    /** Whether the month an asset is placed in service is depreciated in full, or depreciation starts the month after. */
+    firstMonth: "full-month" | "next-month";
+  };
   hledger: {
     /** How imported account names are matched to the chart. */
     importMatch: "last-segment" | "full-name";
@@ -136,6 +140,7 @@ export function defaultSettings(): EntrypadSettings {
     accounts: { ignoreCase: true, collapseSpaces: true, matchAliases: true, matchIds: true },
     autofix: { inferBlankAmount: true, suggestNearestAccount: true },
     diagnostics: { ...diagnosticDefaults },
+    schedules: { firstMonth: "full-month" },
     hledger: {
       importMatch: "last-segment",
       keepUnsupportedAsComments: true,
@@ -354,6 +359,18 @@ export const settingsSpec: readonly SettingSpec[] = [
       choices: severityChoices,
     }),
   ),
+  {
+    key: "schedules.firstMonth",
+    group: "Depreciation schedules",
+    label: "The month an asset is placed in service",
+    description: "Applies to straight-line and double-declining schedules. Units of production follow the units used.",
+    scope: "file",
+    type: "choice",
+    choices: [
+      { value: "full-month", label: "Depreciate it as a full month" },
+      { value: "next-month", label: "Start depreciation the month after" },
+    ],
+  },
   {
     key: "hledger.importMatch",
     group: "hledger and ledger",

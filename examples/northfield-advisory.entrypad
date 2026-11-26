@@ -1,6 +1,7 @@
 # Northfield Advisory, April 2026
 # A consulting firm's first month: a quarterly retainer received in advance, client billing and collection, a bank loan, and accruals including income tax.
 book "Northfield Advisory" period 2026-04-01..2026-04-30
+asset "Laptops" account Equipment cost 4,800 salvage 0 life 3 years method straight-line from 2026-04-02
 
 Apr 1  Founders invest cash   [financing]
   Cash                15,000

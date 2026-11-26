@@ -145,5 +145,64 @@
       },
       "operating": "5,747.41"
     }
-  }
+  },
+  "schedules": [
+    {
+      "asset": "Ovens",
+      "method": "straight-line",
+      "depreciable": "12,000.00",
+      "period": [
+        {
+          "start": "2026-01-01",
+          "end": "2026-01-31",
+          "opening": "12,000.00",
+          "depreciation": "200.00",
+          "accumulated": "200.00",
+          "closing": "11,800.00"
+        }
+      ],
+      "years": [
+        {
+          "start": "2026-01-01",
+          "end": "2026-12-31",
+          "opening": "12,000.00",
+          "depreciation": "2,400.00",
+          "accumulated": "2,400.00",
+          "closing": "9,600.00"
+        },
+        {
+          "start": "2027-01-01",
+          "end": "2027-12-31",
+          "opening": "9,600.00",
+          "depreciation": "2,400.00",
+          "accumulated": "4,800.00",
+          "closing": "7,200.00"
+        },
+        {
+          "start": "2028-01-01",
+          "end": "2028-12-31",
+          "opening": "7,200.00",
+          "depreciation": "2,400.00",
+          "accumulated": "7,200.00",
+          "closing": "4,800.00"
+        },
+        {
+          "start": "2029-01-01",
+          "end": "2029-12-31",
+          "opening": "4,800.00",
+          "depreciation": "2,400.00",
+          "accumulated": "9,600.00",
+          "closing": "2,400.00"
+        },
+        {
+          "start": "2030-01-01",
+          "end": "2030-12-31",
+          "opening": "2,400.00",
+          "depreciation": "2,400.00",
+          "accumulated": "12,000.00",
+          "closing": "0.00"
+        }
+      ]
+    }
+  ]
 }

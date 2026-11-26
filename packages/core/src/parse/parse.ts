@@ -6,6 +6,7 @@ import { defaultSettings, parseSettingText, setSetting, settingSpec } from "../s
 import type { EntrypadSettings, SettingValue } from "../settings.js";
 import type { Account, AccountType, Book, Entry, EntryTag, Line, Side, SourceRange } from "../types.js";
 import { looksLikeAmount, parseAmount } from "./amount.js";
+import { readAssetLines } from "./asset.js";
 import { classifyLine } from "./classify.js";
 import type { ClassifiedLine } from "./classify.js";
 import { inferYear, isoDate, isRealDate, readFullDate } from "./date.js";
@@ -279,6 +280,8 @@ export function parse(text: string, settings: EntrypadSettings = defaultSettings
 
   readBookLines(lines, book, s, report);
   readAccountLines(lines, book, s, report);
+  // Asset lines need the period and the whole chart, so they come after both.
+  readAssetLines(lines, book, s, report);
 
   const currentYear = (options.today ?? new Date()).getFullYear();
   let previousYear: number | undefined;

@@ -67,6 +67,23 @@ const expectations: (((r: ParseResult) => void) | { skip: string })[] = [
       { id: "accumulated-depreciation-vans", name: "Accumulated Depreciation, Vans", type: "asset", normal: "credit", contraOf: "delivery-vans" },
       { id: "catering-revenue", name: "Catering Revenue", type: "revenue", normal: "credit", aliases: ["Catering"] },
     ]),
+  // asset
+  (r) =>
+    expect(r.book.assets?.map(({ source: _source, ...a }) => a)).toEqual([
+      { id: "ovens", name: "Ovens", account: "equipment", cost: 1_200_000, salvage: 0, life: 60, method: "straight-line", from: "2026-01-03" },
+      { id: "delivery-van", name: "Delivery van", account: "equipment", cost: 3_000_000, salvage: 300_000, life: 60, method: "double-declining", from: "2026-01-01" },
+      {
+        id: "packaging-line",
+        name: "Packaging line",
+        account: "equipment",
+        cost: 5_000_000,
+        salvage: 200_000,
+        method: "units",
+        units: 400_000,
+        usage: [{ month: "2026-01", units: 9_000 }],
+        from: "2026-01-01",
+      },
+    ]),
   // show
   (r) =>
     expect(r.shows.map((s) => [s.visual, s.options])).toEqual([

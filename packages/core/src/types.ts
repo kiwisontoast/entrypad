@@ -79,4 +79,35 @@ export interface Book {
   entries: Entry[];
   period?: { start: string; end: string };
   settings: BookSettings;
+  /** Depreciable assets, from `asset` lines. Absent when there are none. */
+  assets?: Asset[];
+}
+
+export type DepreciationMethod = "straight-line" | "double-declining" | "units";
+
+/**
+ * A depreciable asset, from an `asset` line. Its schedule is a view worked
+ * out from these figures (see `depreciationSchedule`); it posts nothing.
+ */
+export interface Asset {
+  /** Stable identifier made from the name, e.g. "ovens". */
+  id: string;
+  /** Display label, e.g. "Ovens". */
+  name: string;
+  /** The account the asset is carried in: its id when it matched the chart, otherwise the name as written. */
+  account: string;
+  /** Integer cents. */
+  cost: number;
+  /** Integer cents; 0 when not written. */
+  salvage: number;
+  /** Useful life in months. Absent for the units-of-production method. */
+  life?: number;
+  method: DepreciationMethod;
+  /** Units-of-production method: the total units the asset is expected to produce. */
+  units?: number;
+  /** Units-of-production method: units used, by month ("2026-01"), in month order. */
+  usage?: { month: string; units: number }[];
+  /** ISO date the asset was placed in service. */
+  from: string;
+  source?: SourceRange;
 }

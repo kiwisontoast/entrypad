@@ -2,12 +2,13 @@ import { usGaapIntroChart } from "./charts/usGaapIntro.js";
 import { isGroupFor } from "./groups.js";
 import { groupThousands } from "./money.js";
 import { looksLikeAmount } from "./parse/amount.js";
+import { assetKeywords } from "./parse/asset.js";
 import { inferYear } from "./parse/date.js";
 import { OPENING_ENTRY_ID } from "./parse/parse.js";
 import type { Show } from "./parse/parse.js";
 import { defaultSettings, fileSettingLines } from "./settings.js";
 import type { EntrypadSettings } from "./settings.js";
-import type { Account, Book, Entry, Line, Side } from "./types.js";
+import type { Account, Asset, Book, Entry, Line, Side } from "./types.js";
 
 export interface FormatOptions {
   /** Written as `set` lines where they differ from the defaults, and used to decide when a year can be left out. */
@@ -135,6 +136,24 @@ function accountLine(account: Account, chart: readonly Account[], original?: Acc
 
 const same = (a: Account, b: Account) => JSON.stringify(a) === JSON.stringify(b);
 
+const MONTH_YEAR = (month: string) => `${MONTHS[+month.slice(5, 7) - 1]} ${month.slice(0, 4)}`;
+
+/** Writes an `asset` line with every part spelled out, in a fixed order. */
+export function formatAsset(asset: Asset, chart: readonly Account[]): string {
+  const account = nameOf(asset.account, chart);
+  const clashes = account.split(/\s+/).some((w) => (assetKeywords as readonly string[]).includes(w.toLowerCase()));
+  const shownAccount = (clashes || /^"/.test(account) || account !== account.trim()) && !account.includes('"') ? `"${account}"` : account;
+  let line = `asset "${asset.name}" account ${shownAccount} cost ${formatAmount(asset.cost)} salvage ${formatAmount(asset.salvage)}`;
+  if (asset.method === "units") {
+    line += ` units ${formatAmount((asset.units ?? 0) * 100)} from ${asset.from}`;
+    for (const u of asset.usage ?? []) line += ` used ${formatAmount(u.units * 100)} in ${MONTH_YEAR(u.month)}`;
+    return line;
+  }
+  const life = asset.life ?? 0;
+  const lifeText = life % 12 === 0 ? `${life / 12} year${life === 12 ? "" : "s"}` : `${life} month${life === 1 ? "" : "s"}`;
+  return `${line} life ${lifeText} method ${asset.method} from ${asset.from}`;
+}
+
 export function formatShow(show: Show): string {
   return `show ${show.visual}${show.options.length ? `: ${show.options.join(", ")}` : ""}`;
 }
@@ -158,6 +177,7 @@ export function format(book: Book, options: FormatOptions = {}): string {
     const base = baseChart.find((a) => a.id === account.id);
     if (!base || !same(base, account)) head.push(accountLine(account, book.chart, base));
   }
+  for (const asset of book.assets ?? []) head.push(formatAsset(asset, book.chart));
   if (head.length) sections.push(head.join(nl));
 
   const ctx: EntryContext = { chart: book.chart, settings, ...(book.period && { period: book.period }) };

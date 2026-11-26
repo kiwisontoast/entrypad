@@ -59,6 +59,7 @@ describe("diagnose", () => {
       "inferred-amount",
       "outside-period",
       "inferred-cash-section",
+      "depreciation-mismatch",
     ]);
     for (const r of bookRules) expect(defaultSettings().diagnostics).toHaveProperty(r.code, r.severity);
   });

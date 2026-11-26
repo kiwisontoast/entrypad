@@ -5,7 +5,7 @@ import { format, formatAmount, quoteName } from "./format.js";
 import { groupsFor } from "./groups.js";
 import { accountId, parse } from "./parse/parse.js";
 import { defaultSettings, setSetting } from "./settings.js";
-import type { Account, Book, Entry, EntryTag, Line } from "./types.js";
+import type { Account, Asset, Book, Entry, EntryTag, Line } from "./types.js";
 
 const today = new Date(2026, 5, 1);
 const read = (text: string) => parse(text, undefined, { today });
@@ -197,7 +197,48 @@ function randomBook(seed: number): Book {
       lines,
     });
   }
-  return { name: "Generated", chart, entries, ...(period && { period }), settings: { standard: "us-gaap", currency: "USD", decimals: 0 } };
+  const assets = randomAssets(r, chart);
+  return {
+    name: "Generated",
+    chart,
+    entries,
+    ...(period && { period }),
+    settings: { standard: "us-gaap", currency: "USD", decimals: 0 },
+    ...(assets.length && { assets }),
+  };
+}
+
+const ASSET_NAMES = ["Ovens", "Delivery van", "Used cost machine", "Ovens"];
+
+/** Assets on any plain asset account, including custom ones whose names need quotes. */
+function randomAssets(r: ReturnType<typeof random>, chart: Account[]): Asset[] {
+  const accounts = chart.filter((a) => a.type === "asset" && a.contraOf === undefined);
+  const assets: Asset[] = [];
+  const ids = new Set<string>();
+  for (let n = r.chance(0.4) ? r.int(1, 3) : 0; n > 0; n--) {
+    const name = r.pick(ASSET_NAMES);
+    let id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    for (let k = 2; ids.has(id); k++) id = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${k}`;
+    ids.add(id);
+    const cost = r.int(1, 5_000) * 100 + (r.chance(0.3) ? r.int(0, 99) : 0);
+    const salvage = r.chance(0.5) ? 0 : r.int(0, cost);
+    const from = `${r.int(2020, 2026)}-${String(r.int(1, 12)).padStart(2, "0")}-${String(r.int(1, 28)).padStart(2, "0")}`;
+    const method = r.pick(["straight-line", "double-declining", "units"] as const);
+    const base = { id, name, account: r.pick(accounts).id, cost, salvage, method, from };
+    if (method !== "units") {
+      assets.push({ ...base, life: r.chance(0.5) ? r.int(1, 40) * 12 : r.int(1, 480) });
+      continue;
+    }
+    const months = new Set<string>();
+    for (let k = r.int(0, 3); k > 0; k--) {
+      const year = +from.slice(0, 4) + r.int(0, 2);
+      const month = `${year}-${String(r.int(year === +from.slice(0, 4) ? +from.slice(5, 7) : 1, 12)).padStart(2, "0")}`;
+      months.add(month);
+    }
+    const usage = [...months].sort().map((month) => ({ month, units: r.int(0, 50_000) }));
+    assets.push({ ...base, units: r.int(1, 1_000_000), usage });
+  }
+  return assets;
 }
 
 const meaning = (book: Book) =>
@@ -218,6 +259,8 @@ describe("parse after format", () => {
       expect(back.diagnostics, `seed ${seed}\n${text}`).toEqual([]);
       expect(meaning(back.book), `seed ${seed}\n${text}`).toEqual(meaning(book));
       expect(back.book.chart).toEqual(book.chart);
+      expect(back.book.assets?.map(({ source: _source, ...a }) => a), `seed ${seed}
+${text}`).toEqual(book.assets);
       expect(format(back.book), `seed ${seed}`).toBe(text);
     }
   });

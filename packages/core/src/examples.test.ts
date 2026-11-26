@@ -6,6 +6,8 @@ import { cashFlow } from "./cashflow.js";
 import { diagnose } from "./diagnose.js";
 import { parse } from "./parse/parse.js";
 import { balanceSheet, incomeStatement, retainedEarnings, trialBalance } from "./statements.js";
+import { depreciationSchedule } from "./schedules.js";
+import type { ScheduleRow } from "./schedules.js";
 import { equation, ledger } from "./views.js";
 
 const dir = new URL("../../../examples/", import.meta.url);
@@ -161,5 +163,28 @@ describe.each(samples().map((s) => [s.slug, s] as const))("sample book %s", (slu
       expect(indirect.netChange, `after ${at}`).toBe(direct.netChange);
       expect(direct.endingCash, `after ${at}`).toBe(ledger(book, at).get("cash")!.balance);
     }
+  });
+
+  it("has the expected depreciation schedules, and its entries agree with them", () => {
+    const wanted = expected.schedules ?? [];
+    const toCents = (r: (typeof wanted)[number]["years"][number]) => ({
+      start: r.start,
+      end: r.end,
+      opening: cents(r.opening),
+      depreciation: cents(r.depreciation),
+      accumulated: cents(r.accumulated),
+      closing: cents(r.closing),
+    });
+    const strip = ({ number: _n, units: _u, ...r }: ScheduleRow) => r;
+    const period = book.period!;
+    expect(book.assets?.map((a) => a.name) ?? []).toEqual(wanted.map((s) => s.asset));
+    for (const want of wanted) {
+      const monthly = depreciationSchedule(book, want.asset)!;
+      expect(monthly.asset.method).toBe(want.method);
+      expect(monthly.depreciable).toBe(cents(want.depreciable));
+      expect(monthly.rows.filter((r) => r.start >= period.start && r.end <= period.end).map(strip)).toEqual(want.period.map(toCents));
+      expect(depreciationSchedule(book, want.asset, { grain: "year" })!.rows.map(strip)).toEqual(want.years.map(toCents));
+    }
+    expect(diagnose(book).filter((d) => d.code === "depreciation-mismatch")).toEqual([]);
   });
 });

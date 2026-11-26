@@ -1,6 +1,7 @@
 # Sunrise Bakery, January 2026
 # A bakery's first month: the owner's investment, ovens bought half on a note, weekly sales, a catering client and month-end adjustments.
 book "Sunrise Bakery" period 2026-01-01..2026-01-31
+asset "Ovens" account Equipment cost 12,000 salvage 0 life 5 years method straight-line from 2026-01-03
 
 Jan 1  Owner invests cash   [financing]
   Cash                25,000

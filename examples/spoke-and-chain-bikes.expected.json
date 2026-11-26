@@ -140,5 +140,64 @@
       },
       "operating": "1,079.57"
     }
-  }
+  },
+  "schedules": [
+    {
+      "asset": "Workshop tools",
+      "method": "straight-line",
+      "depreciable": "6,000.00",
+      "period": [
+        {
+          "start": "2026-03-01",
+          "end": "2026-03-31",
+          "opening": "4,800.00",
+          "depreciation": "100.00",
+          "accumulated": "1,300.00",
+          "closing": "4,700.00"
+        }
+      ],
+      "years": [
+        {
+          "start": "2025-03-01",
+          "end": "2026-02-28",
+          "opening": "6,000.00",
+          "depreciation": "1,200.00",
+          "accumulated": "1,200.00",
+          "closing": "4,800.00"
+        },
+        {
+          "start": "2026-03-01",
+          "end": "2027-02-28",
+          "opening": "4,800.00",
+          "depreciation": "1,200.00",
+          "accumulated": "2,400.00",
+          "closing": "3,600.00"
+        },
+        {
+          "start": "2027-03-01",
+          "end": "2028-02-29",
+          "opening": "3,600.00",
+          "depreciation": "1,200.00",
+          "accumulated": "3,600.00",
+          "closing": "2,400.00"
+        },
+        {
+          "start": "2028-03-01",
+          "end": "2029-02-28",
+          "opening": "2,400.00",
+          "depreciation": "1,200.00",
+          "accumulated": "4,800.00",
+          "closing": "1,200.00"
+        },
+        {
+          "start": "2029-03-01",
+          "end": "2030-02-28",
+          "opening": "1,200.00",
+          "depreciation": "1,200.00",
+          "accumulated": "6,000.00",
+          "closing": "0.00"
+        }
+      ]
+    }
+  ]
 }

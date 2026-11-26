@@ -1,6 +1,7 @@
 # Spoke & Chain Bikes, March 2026
 # An established bike shop's March: opening balances, inventory bought on account, sales with their cost of goods sold, repairs, a customer deposit and a dividend.
 book "Spoke & Chain Bikes" period 2026-03-01..2026-03-31
+asset "Workshop tools" account Equipment cost 6,000 salvage 0 life 5 years method straight-line from 2025-03-01
 
 open Cash 8,000
 open Inventory 22,000
