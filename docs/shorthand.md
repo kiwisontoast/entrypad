@@ -401,6 +401,8 @@ Every rule on this page that involves a choice has a setting, and the default is
 | `hledger.keepUnsupportedAsComments` | `on` | Unused imported directives are kept as comments rather than dropped. |
 | `hledger.exportAccountNames` | `type-prefixed` | Exported names look like `assets:cash`, or `plain` like `Cash`. |
 | `hledger.exportCurrencySymbol` | `on` | Exported amounts carry a `$`. |
+| `spreadsheet.groupRows` | `auto` | Pasted rows are grouped into entries by the Ref column, then by blank rows, then by a change in date or memo. `blank-rows` and `date-and-memo` use only that rule. |
+| `spreadsheet.amountSigns` | `negative-credit` | In a single Amount column with no Dr/Cr column, negative amounts are credits, or debits (`negative-debit`). |
 
 ## Grammar
 
@@ -533,6 +535,148 @@ Diagnostics from the parser itself:
 | `unknown-visual` | warning | A `show` line names a visual that doesn't exist |
 | `duplicate-book` | warning | A file has more than one `book` line |
 | `unknown-setting` | warning | A `set` line names a setting or value Entrypad doesn't know |
+
+## Spreadsheet paste
+
+Rows copied from Excel or Google Sheets can be pasted into the editor, and a `.csv` or `.tsv` file can be dropped on it. The rows are turned into entries written in the shorthand, laid out as the formatter writes them. The spreadsheet is only an input: once the rows are imported, the shorthand text is the book.
+
+The examples in this section are pasted into a book whose period is the 2026 calendar year. These rows, copied from Excel:
+
+```tsv
+Date	Ref	Account	Description	Debit	Credit
+1/1	1	Cash	Owner invests	10,000	
+1/1	1	Common Stock			10,000
+1/3	2	Equipment	Buy oven	8,000	
+1/3	2	Cash			4,000
+1/3	2	Notes Payable			4,000
+```
+
+become:
+
+```
+Jan 1  Owner invests
+  Cash              10,000
+      Common Stock          10,000
+
+Jan 3  Buy oven
+  Equipment          8,000
+      Cash                  4,000
+      Notes Payable         4,000
+```
+
+### Reading the rows
+
+- Cells can be separated by tabs, which is what Excel and Google Sheets copy, or by commas or semicolons. The separator is taken from the first line that has one: a tab if there is one, otherwise whichever of comma and semicolon appears more often.
+- Quoting follows RFC 4180. A cell in double quotes can hold the separator, line breaks, and double quotes written twice (`""`). Spaces before the opening quote are allowed.
+- A byte order mark at the start of a file, CRLF line endings, and empty cells at the end of a row are accepted.
+- Runs of spaces inside a cell, non-breaking spaces and line breaks included, count as one space, and spaces at either end are dropped.
+
+### Columns
+
+The first row is the header when at least one of its cells is a column name from the table below and none of its cells reads as a date or an amount. Entrypad looks for the header among the first 10 rows that aren't blank, so a title above it is skipped. Names are matched without regard to case, spaces or punctuation: `Dr.`, `DR` and `dr` are the same, `#` reads as "no" (so `JE #` matches `JE No`), and a trailing `USD` is ignored.
+
+| Column | Names it is found by |
+| --- | --- |
+| Date | Date, Entry Date, Posting Date, Post Date, Transaction Date, Trans Date, Txn Date, Journal Date, GL Date, Effective Date |
+| Ref | Ref, Ref No, Reference, Reference No, Reference Number, Entry, Entry No, Entry Number, Entry ID, JE, JE No, JE Number, JE ID, Journal Entry, Journal Entry No, Journal Entry Number, Journal No, Journal Number, Transaction No, Transaction Number, Transaction ID, Txn No, Txn ID, Voucher, Voucher No, No, Number, ID |
+| Account | Account, Accounts, Account Name, Account Title, Account Titles, Acct, Acct Name, GL Account, GL Account Name, Ledger Account |
+| Memo | Memo, Description, Desc, Explanation, Narration, Narrative, Details, Line Memo, Line Description, Comment, Comments, Note, Notes |
+| Debit | Debit, Debits, Dr, Debit Amount, Debit Amt, Dr Amount |
+| Credit | Credit, Credits, Cr, Credit Amount, Credit Amt, Cr Amount |
+| Amount | Amount, Amt, Value, Net Amount |
+| Dr/Cr | Dr/Cr, Cr/Dr, Debit/Credit, Credit/Debit, Debit or Credit, Dr or Cr, DrCr, DC, D/C, Side |
+
+The rows need an Account column and either a Debit and Credit pair or an Amount column. Date, Ref, Memo and Dr/Cr are optional.
+
+Without a header, the columns are guessed from what they hold. A column of dates is the Date column and a column of `Dr` and `Cr` the Dr/Cr column. A column of whole numbers to the left of the account is the Ref column. The other columns of amounts are Debit and Credit, in that order, or the Amount column when there is one of them or a Dr/Cr column. Of the columns of text, the one with the most names from the chart is the Account column, and the first of the others is the Memo column.
+
+Before importing, the editor shows how it has read each column whenever the header is missing or unclear, and the columns can be reassigned there. That happens when:
+
+- there is no header, so the columns were guessed;
+- a column's name isn't in the table above (the column is left out);
+- two columns have names for the same column (the first is used);
+- the Account column is missing, or there are no amount columns, or only one of Debit and Credit;
+- there are Debit and Credit columns and also an Amount or Dr/Cr column (the Debit and Credit columns are used).
+
+### Amounts and sides
+
+- Amounts are read as in the shorthand, so `10,000`, `$10,000`, `10,000.00` and `1,200.50` all work. Spaces inside an amount and `USD` before or after it are ignored. A cell holding only `-`, which is how Excel's accounting format shows zero, counts as empty.
+- With Debit and Credit columns, the column gives the side. A row with an amount in both is left out and flagged, unless one of the two is 0.
+- With an Amount column and a Dr/Cr column, the Dr/Cr cell gives the side. It can be `Dr`, `Debit`, `D`, `Cr`, `Credit` or `C`, in any case.
+- With an Amount column alone, or where a row's Dr/Cr cell is empty, the sign gives the side: positive amounts are debits and negative ones, written `-450` or `(450)`, are credits (`spreadsheet.amountSigns`).
+- A negative amount in a Debit or Credit column, or beside a Dr or Cr, follows `parsing.negativeAmounts` as in the shorthand. By default it is read as positive on the side it is on, and flagged `negative-amount`.
+- A row with an account and no amount becomes a posting with a blank amount. If it is the only one in its entry and nothing gives its side, it takes the side that balances the entry, and the amount is then filled in as described under [Leaving one amount blank](#leaving-one-amount-blank).
+
+```csv
+Date,Account,Memo,Amount
+1/9,Rent Expense,Pay January rent,"$1,200"
+1/9,Cash,,"(1,200)"
+1/15,Accounts Receivable,Bill a catering client,3000.00
+1/15,Service Revenue,,-3000
+```
+
+becomes:
+
+```
+Jan 9  Pay January rent
+  Rent Expense  1,200
+      Cash             1,200
+
+Jan 15 Bill a catering client
+  Accounts Receivable  3,000
+      Service Revenue         3,000
+```
+
+### Dates
+
+A Date cell is read as an entry header's date is in the shorthand: `1/3` is January 3 (`parsing.dateOrder`), and `Jan 3`, `1/3/2026` and `2026-01-03` work too. A date without a year takes its year from the book's period, as in the shorthand. A blank Date cell means the same date as the row above, so a date written only on the first row of each entry is enough.
+
+### Grouping rows into entries
+
+Rows are grouped into entries by the first of these rules that applies (`spreadsheet.groupRows`):
+
+1. By the Ref column, when it has any values. Rows with the same ref form one entry, in the order the refs first appear. A row with an empty Ref cell belongs to the entry above it.
+2. By blank rows, when there are any between the rows. The rows between two blank rows form one entry.
+3. By a change in the date or the memo. A row starts a new entry when its date differs from the entry's, or when it has a memo and the entry already has a different one.
+
+Under the third rule, two entries in a row with the same date and no memos are read as one. Separate them with a blank row or give them a Ref.
+
+An entry's date and memo come from its first row that has one. The shorthand has one memo per entry, so memos on the entry's later rows are kept as comments above it.
+
+These rows are grouped by the blank row between them, and the title above the header is skipped:
+
+```csv
+Sunrise Bakery, adjusting entries
+Date,Account,Dr/Cr,Amount
+1/31,Depreciation Expense,Dr,200
+,"Accumulated Depreciation, Equipment",Cr,200
+
+1/31,Interest Expense,Dr,20
+,Interest Payable,Cr,20
+```
+
+become:
+
+```
+Jan 31
+  Depreciation Expense                     200
+      Accumulated Depreciation, Equipment       200
+
+Jan 31
+  Interest Expense      20
+      Interest Payable      20
+```
+
+### Rows that can't be read
+
+The import never stops at a bad row. A row that can't be read is reported with its row number, counting the first row of the paste (usually the header) as row 1, and the other rows are imported as usual. A quoted cell with line breaks is still one row. The findings use the shorthand's codes:
+
+| Code | Raised when |
+| --- | --- |
+| `unreadable-line` | A row has an amount but no account, has both a debit and a credit, or has neither an account nor an amount (the row is left out); a Dr/Cr cell isn't one of the words above (the sign is used instead); or a quote isn't closed (the rest of the text is read as one cell) |
+| `invalid-amount` | An amount can't be read. The posting keeps its account and its amount is treated as blank. |
+| `invalid-date` | A date can't be read or doesn't exist. The row's entry is undated. |
+| `negative-amount` | A Debit or Credit amount, or one beside a Dr or Cr, is negative |
 
 ## hledger and ledger
 

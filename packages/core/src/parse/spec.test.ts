@@ -7,7 +7,10 @@ import { parse } from "./parse.js";
 import type { ParseResult } from "./parse.js";
 
 const doc = readFileSync(new URL("../../../../docs/shorthand.md", import.meta.url), "utf8");
-const blocks = [...doc.matchAll(/^```(\w*)\r?\n([\s\S]*?)^```/gm)].map((m) => ({ lang: m[1]!, text: m[2]! }));
+const allBlocks = [...doc.matchAll(/^```(\w*)\r?\n([\s\S]*?)^```/gm)].map((m) => ({ lang: m[1]!, text: m[2]! }));
+/** Spreadsheet paste examples (a `csv` or `tsv` block and the shorthand after it) are checked in rows.test.ts. */
+const isRows = (b?: { lang: string }) => b?.lang === "csv" || b?.lang === "tsv";
+const blocks = allBlocks.filter((b, i) => !isRows(b) && !isRows(allBlocks[i - 1]));
 const today = new Date(2026, 5, 1);
 const summary = (lines: Line[]) => lines.map((l) => `${l.side} ${l.account} ${l.amount / 100}`);
 

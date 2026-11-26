@@ -20,6 +20,8 @@ export { applyChanges, bookChanges, editEntry, entryChanges } from "./edit.js";
 export { bookRules, diagnose } from "./diagnose.js";
 export { exportHledger, importHledger, matchHledgerAccount } from "./hledger.js";
 export type { HledgerImport, HledgerOptions } from "./hledger.js";
+export { headerKey, importRows } from "./rows.js";
+export type { RowAmbiguity, RowDelimiter, RowField, RowGrouping, RowImport, RowImportOptions, RowMapping } from "./rows.js";
 export { runRules } from "./rules.js";
 export type { Rule, RuleContext, RuleFinding } from "./rules.js";
 export type { TextChange } from "./edit.js";

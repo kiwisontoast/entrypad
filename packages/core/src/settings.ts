@@ -72,6 +72,12 @@ export interface EntrypadSettings {
     /** Place an untagged entry that moves cash by the accounts on its other side. */
     inferSections: boolean;
   };
+  spreadsheet: {
+    /** How pasted rows are grouped into entries. */
+    groupRows: "auto" | "blank-rows" | "date-and-memo";
+    /** With a single Amount column and no Dr/Cr column, which sign is a credit. */
+    amountSigns: "negative-credit" | "negative-debit";
+  };
   display: {
     /** Draw squiggles in the editor. */
     showDiagnostics: boolean;
@@ -148,6 +154,7 @@ export function defaultSettings(): EntrypadSettings {
       exportCurrencySymbol: true,
     },
     cashFlow: { inferSections: true },
+    spreadsheet: { groupRows: "auto", amountSigns: "negative-credit" },
     display: { showDiagnostics: true, staticPartsAsComponents: true, singlePointerDrags: true, touchScroll: true },
     export: { includeDiagnostics: false, pngScale: 2, embedFonts: true, gifSecondsPerEntry: 1.5 },
     sharing: { linkWarningLength: 8000 },
@@ -419,6 +426,31 @@ export const settingsSpec: readonly SettingSpec[] = [
       "An entry that moves cash without an operating, investing or financing tag is placed by the accounts on its other side. When off, it is shown under operating activities.",
     scope: "file",
     ...onOff,
+  },
+  {
+    key: "spreadsheet.groupRows",
+    group: "Spreadsheet paste",
+    label: "Group pasted rows into entries by",
+    description: "Automatic uses the Ref column when there is one, then blank rows, then a change in date or memo.",
+    scope: "file",
+    type: "choice",
+    choices: [
+      { value: "auto", label: "Automatic" },
+      { value: "blank-rows", label: "Blank rows" },
+      { value: "date-and-memo", label: "A change in date or memo" },
+    ],
+  },
+  {
+    key: "spreadsheet.amountSigns",
+    group: "Spreadsheet paste",
+    label: "Signs in a single Amount column",
+    description: "Used when there is no Dr/Cr column.",
+    scope: "file",
+    type: "choice",
+    choices: [
+      { value: "negative-credit", label: "Negative amounts are credits" },
+      { value: "negative-debit", label: "Negative amounts are debits" },
+    ],
   },
   {
     key: "display.showDiagnostics",
