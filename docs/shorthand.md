@@ -269,6 +269,41 @@ Beginning retained earnings, plus net income, less dividends, gives ending retai
 
 A classified balance sheet. Assets are shown as current assets (the `cash` accounts first), investments, property, plant and equipment, intangible assets and other assets. Liabilities are shown as current liabilities (short-term debt included) and long-term liabilities. Equity is the `contributed-capital` accounts plus ending retained earnings from the statement above, so income not yet closed is included and the balance sheet balances whenever the entries do. Contra accounts are shown as negative lines within their section.
 
+### Cash flow statement
+
+The statement of cash flows covers every entry that moves cash, meaning one whose lines on `cash` accounts don't net to zero. Cash from the opening balances is the beginning cash, and beginning cash plus the net change is the ending cash. Closing entries are left out.
+
+Each entry that moves cash falls in one section: operating, investing or financing. The `operating`, `investing` or `financing` tag on the entry decides it. An entry without one of these tags is placed by the accounts on its other side:
+
+| Other side includes | Section |
+| --- | --- |
+| A `property-plant-equipment`, `investments` or `intangible-assets` account | Investing |
+| A `short-term-debt`, `long-term-liabilities`, `contributed-capital` or `dividends` account | Financing |
+| Anything else | Operating |
+
+Investing is checked first, so a purchase of equipment paid partly with a note is investing. Each untagged entry gets an `inferred-cash-section` hint, with fixes that add the tag. With `cashFlow.inferSections` off, untagged entries are operating.
+
+```
+Mar 4  Buy a delivery van, part on a note
+  Equipment               30,000
+      Cash                        6,000
+      Notes Payable              24,000
+
+Mar 9  Customer deposits for spring orders   [operating]
+  Cash                     2,500
+      Unearned Revenue            2,500
+```
+
+The Mar 4 entry has no tag, so it is shown under investing activities because of Equipment. The Mar 9 entry is operating because its tag says so.
+
+The direct method lists each entry's cash under its section. The indirect method builds the operating section from net income instead:
+
+- Net income, from the income statement.
+- Adjustments for items in net income that didn't move cash. A non-cash charge such as depreciation is added back under its expense account. Income from entries shown under investing or financing, such as a gain on the sale of equipment, is taken off.
+- Changes in current assets other than cash, and in current liabilities other than short-term debt. These come from the operating entries and from entries that don't move cash, so a liability taken on to buy equipment isn't counted as an operating change.
+
+Both methods give the same operating total, and so the same net change in cash. An entry that doesn't move cash and doesn't affect net income, but involves an investing or financing account, such as land bought by issuing stock, is listed separately as a non-cash investing and financing activity.
+
 ## Settings
 
 Every rule on this page that involves a choice has a setting, and the default is the behaviour described above. You can change any of them in the editor's settings, or for one book with a `set` line.
@@ -295,6 +330,7 @@ Every rule on this page that involves a choice has a setting, and the default is
 | `accounts.matchIds` | `on` | Ids such as `accounts-receivable` match. |
 | `autofix.inferBlankAmount` | `on` | The one blank amount in an entry is filled in. When off, it stays blank and the entry is flagged as unbalanced. |
 | `diagnostics.<code>` | as listed under [Errors](#errors-and-how-the-parser-recovers) | The severity of each check: `error`, `warning`, `hint` or `off`. |
+| `cashFlow.inferSections` | `on` | An untagged entry that moves cash is placed in a cash flow section by the accounts on its other side. When off, it is operating. |
 | `hledger.importMatch` | `last-segment` | Imported account names match by their last part, or by the `full-name`. |
 | `hledger.keepUnsupportedAsComments` | `on` | Unused imported directives are kept as comments rather than dropped. |
 | `hledger.exportAccountNames` | `type-prefixed` | Exported names look like `assets:cash`, or `plain` like `Cash`. |
@@ -402,6 +438,7 @@ Diagnostics from the book rules (see `diagnose()`):
 | `zero-amount` | warning | A posting's amount is 0 |
 | `inferred-amount` | hint | A blank amount was filled in; the hint shows the value |
 | `outside-period` | hint | An entry's date falls outside the book's period |
+| `inferred-cash-section` | hint | An entry moves cash but has no `operating`, `investing` or `financing` tag, so its cash flow section was inferred |
 
 An entry with fewer than two lines, or with more than one blank amount, is reported only under its own code, not as unbalanced as well. `odd-side` looks at revenue and expense accounts posted against their normal side, and accepts them in an entry tagged `[closing]`.
 

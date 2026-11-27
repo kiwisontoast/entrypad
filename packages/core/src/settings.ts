@@ -64,6 +64,10 @@ export interface EntrypadSettings {
     /** Write a $ before exported amounts. */
     exportCurrencySymbol: boolean;
   };
+  cashFlow: {
+    /** Place an untagged entry that moves cash by the accounts on its other side. */
+    inferSections: boolean;
+  };
   display: {
     /** Draw squiggles in the editor. */
     showDiagnostics: boolean;
@@ -138,6 +142,7 @@ export function defaultSettings(): EntrypadSettings {
       exportAccountNames: "type-prefixed",
       exportCurrencySymbol: true,
     },
+    cashFlow: { inferSections: true },
     display: { showDiagnostics: true, staticPartsAsComponents: true, singlePointerDrags: true, touchScroll: true },
     export: { includeDiagnostics: false, pngScale: 2, embedFonts: true, gifSecondsPerEntry: 1.5 },
     sharing: { linkWarningLength: 8000 },
@@ -386,6 +391,15 @@ export const settingsSpec: readonly SettingSpec[] = [
     group: "hledger and ledger",
     label: "Write $ before exported amounts",
     description: "",
+    scope: "file",
+    ...onOff,
+  },
+  {
+    key: "cashFlow.inferSections",
+    group: "Statements",
+    label: "Infer the cash flow section of untagged entries",
+    description:
+      "An entry that moves cash without an operating, investing or financing tag is placed by the accounts on its other side. When off, it is shown under operating activities.",
     scope: "file",
     ...onOff,
   },

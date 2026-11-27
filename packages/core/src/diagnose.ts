@@ -1,5 +1,6 @@
 import { suggestAccounts } from "./accounts.js";
 import { balances } from "./balances.js";
+import { cashFlowSections, cashSections } from "./cashflow.js";
 import type { Diagnostic } from "./diagnostics.js";
 import { formatAmount } from "./format.js";
 import { runRules } from "./rules.js";
@@ -255,6 +256,33 @@ const outsidePeriod: Rule<Book> = {
   },
 };
 
+const inferredCashSection: Rule<Book> = {
+  code: "inferred-cash-section",
+  severity: "hint",
+  check(book, { settings }) {
+    const out: RuleFinding[] = [];
+    const byId = new Map(book.entries.map((e) => [e.id, e]));
+    for (const [id, placed] of cashSections(book, settings)) {
+      if (!placed.inferred) continue;
+      const entry = byId.get(id)!;
+      const because = placed.basis ? ` because of ${placed.basis.name}` : "";
+      const order = [placed.section, ...cashFlowSections.filter((s) => s !== placed.section)];
+      out.push({
+        message: `This entry has no cash flow tag, so it's shown under ${placed.section} activities${because}`,
+        target: entryTarget(entry),
+        fixes: order.map((section) => ({
+          label: `Tag it [${section}]`,
+          apply: (b: Book) => ({
+            ...b,
+            entries: b.entries.map((e) => (e.id === id ? { ...e, tags: [...(e.tags ?? []), section] } : e)),
+          }),
+        })),
+      });
+    }
+    return out;
+  },
+};
+
 /** The book rules, in the order the plan lists them. Packs add theirs by passing a longer array. */
 export const bookRules: readonly Rule<Book>[] = [
   unbalancedEntry,
@@ -266,6 +294,7 @@ export const bookRules: readonly Rule<Book>[] = [
   zeroAmount,
   inferredAmount,
   outsidePeriod,
+  inferredCashSection,
 ];
 
 /**

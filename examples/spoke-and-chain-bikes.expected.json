@@ -118,5 +118,27 @@
     "retainedEarnings": "7,444.59",
     "totalEquity": "27,444.59",
     "totalLiabilitiesAndEquity": "36,864.59"
+  },
+  "cashFlow": {
+    "operating": "1,079.57",
+    "investing": "0.00",
+    "financing": "-1,000.00",
+    "netChange": "79.57",
+    "beginningCash": "8,000.00",
+    "endingCash": "8,079.57",
+    "indirect": {
+      "netIncome": "-1,555.41",
+      "depreciation": "100.00",
+      "currentAssets": {
+        "Accounts Receivable": "-1,800.00",
+        "Inventory": "-285.02"
+      },
+      "currentLiabilities": {
+        "Accounts Payable": "2,600.00",
+        "Wages Payable": "520.00",
+        "Unearned Revenue": "1,500.00"
+      },
+      "operating": "1,079.57"
+    }
   }
 }

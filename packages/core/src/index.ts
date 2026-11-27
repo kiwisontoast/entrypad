@@ -37,6 +37,19 @@ export type {
   TrialBalance,
   TrialBalanceRow,
 } from "./statements.js";
+export { cashFlow, cashFlowSections, cashSections } from "./cashflow.js";
+export type {
+  CashActivity,
+  CashFlow,
+  CashFlowItem,
+  CashFlowMethod,
+  CashFlowSection,
+  CashSection,
+  DirectCashFlow,
+  IndirectCashFlow,
+  IndirectOperating,
+  NonCashActivity,
+} from "./cashflow.js";
 export { accountGroups, defaultGroups, effectiveGroup, groupLabels, groupsFor, isGroupFor } from "./groups.js";
 export type { AccountGroup } from "./groups.js";
 export type { AccountBalance, Posting } from "./balances.js";

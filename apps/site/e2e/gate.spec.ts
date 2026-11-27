@@ -66,7 +66,9 @@ test.describe("Phase 1 gate", () => {
     // Ten entries, no problems (the filled-in catering amount is only a hint).
     await expect.poll(() => page.evaluate(() => window.__editor.book().entries.length)).toBe(10);
     await expect(page.locator("#status")).toHaveText("No problems");
-    await expect(page.locator(".cm-lintRange-hint")).toHaveCount(1);
+    const codes = await page.evaluate(() => window.__editor.analysis().findings.map((f) => f.code));
+    expect(codes.filter((c) => c === "inferred-amount")).toHaveLength(1);
+    await expect(page.locator(".cm-lintRange-hint")).toHaveCount(codes.length);
 
     // Cash: 20,000 - 1,500 - 4,000 + 2,600 - 1,900 - 500 + 1,200.
     await expect(page.locator("#t-cash")).toContainText("15,900");

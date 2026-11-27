@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { samples } from "../../../examples/generate.ts";
 import type { Expected } from "../../../examples/generate.ts";
+import { cashFlow } from "./cashflow.js";
 import { diagnose } from "./diagnose.js";
 import { parse } from "./parse/parse.js";
 import { balanceSheet, incomeStatement, retainedEarnings, trialBalance } from "./statements.js";
@@ -125,5 +126,40 @@ describe.each(samples().map((s) => [s.slug, s] as const))("sample book %s", (slu
       totalEquity: bs.totalEquity,
       totalLiabilitiesAndEquity: bs.totalLiabilitiesAndEquity,
     }).toEqual(allCents(expected.balanceSheet));
+  });
+
+  it("has the expected cash flow statement by the direct method", () => {
+    const cf = cashFlow(book, "direct");
+    const want = expected.cashFlow;
+    expect({
+      operating: cf.operating.total,
+      investing: cf.investing.total,
+      financing: cf.financing.total,
+      netChange: cf.netChange,
+      beginningCash: cf.beginningCash,
+      endingCash: cf.endingCash,
+    }).toEqual(allCents({ operating: want.operating, investing: want.investing, financing: want.financing, netChange: want.netChange, beginningCash: want.beginningCash, endingCash: want.endingCash }));
+    expect(cf.nonCashActivities).toEqual([]);
+  });
+
+  it("has the expected cash flow statement by the indirect method", () => {
+    const op = cashFlow(book, "indirect").operating;
+    const byName = (lines: typeof op.adjustments) => Object.fromEntries(lines.map((l) => [l.account.name, l.amount]));
+    const want = expected.cashFlow.indirect;
+    expect(op.netIncome).toBe(cents(want.netIncome));
+    expect(byName(op.adjustments)).toEqual({ "Depreciation Expense": cents(want.depreciation) });
+    expect(byName(op.currentAssets)).toEqual(allCents(want.currentAssets));
+    expect(byName(op.currentLiabilities)).toEqual(allCents(want.currentLiabilities));
+    expect(op.total).toBe(cents(want.operating));
+  });
+
+  it("gives the same net change in cash by both methods, after every entry", () => {
+    for (let at = 0; at <= book.entries.length; at++) {
+      const direct = cashFlow(book, "direct", at);
+      const indirect = cashFlow(book, "indirect", at);
+      expect(indirect.operating.total, `after ${at}`).toBe(direct.operating.total);
+      expect(indirect.netChange, `after ${at}`).toBe(direct.netChange);
+      expect(direct.endingCash, `after ${at}`).toBe(ledger(book, at).get("cash")!.balance);
+    }
   });
 });

@@ -122,7 +122,7 @@ describe("importHledger", () => {
   it("keeps an unmatched name, for diagnose to flag with suggestions", () => {
     const r = importHledger("2026-01-02 x\n    assets:delivery vans  $100\n    assets:cash  $-100\n", s(), { today });
     expect(r.book.entries[0]!.lines[0]!.account).toBe("delivery vans");
-    expect(diagnose(r.book).map((d) => d.code)).toEqual(["unknown-account", "abnormal-balance"]);
+    expect(diagnose(r.book).map((d) => d.code)).toEqual(["inferred-cash-section", "unknown-account", "abnormal-balance"]);
   });
 
   it("flags amounts in other commodities and dates that don't exist", () => {

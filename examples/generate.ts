@@ -3,7 +3,8 @@
  * businesses. Run it with `node examples/generate.ts` from the repo root.
  *
  * Each book comes with `<name>.expected.json`: its account balances, trial
- * balance, accounting equation and financial statements, worked out with plain
+ * balance, accounting equation and financial statements, including the
+ * cash flow statement by both methods, worked out with plain
  * arithmetic on integer cents. Nothing in this file uses Entrypad's own code,
  * so the golden tests compare the parser and the derived views against an
  * independent calculation. The figures are written as dollars so they can be
@@ -360,6 +361,40 @@ export interface Expected {
     totalEquity: string;
     totalLiabilitiesAndEquity: string;
   };
+  cashFlow: {
+    operating: string;
+    investing: string;
+    financing: string;
+    netChange: string;
+    beginningCash: string;
+    endingCash: string;
+    /** The operating section by the indirect method, which must reach the same total. */
+    indirect: {
+      netIncome: string;
+      depreciation: string;
+      /** Change in each current asset other than cash, as its effect on cash. */
+      currentAssets: Record<string, string>;
+      /** Change in each current liability other than borrowing, as its effect on cash. */
+      currentLiabilities: Record<string, string>;
+      operating: string;
+    };
+  };
+}
+
+type Section = "operating" | "investing" | "financing";
+
+/**
+ * The cash flow section an accountant would give an entry: its tag, or else
+ * the other side of the entry. Equipment makes it investing; borrowing,
+ * stock and dividends make it financing; anything else is operating.
+ */
+function sectionOf(t: Txn, name: (a: string) => string): Section {
+  const tagged = t.tags?.find((tag): tag is Section => tag === "operating" || tag === "investing" || tag === "financing");
+  if (tagged) return tagged;
+  const places = [...t.dr, ...t.cr].map(([a]) => ACCOUNTS[name(a)]!.place);
+  if (places.includes("fixed-asset")) return "investing";
+  if (places.some((p) => p === "borrowing" || p === "stock" || p === "dividends")) return "financing";
+  return "operating";
 }
 
 /** Works out the figures with plain sums, independently of Entrypad. */
@@ -424,6 +459,43 @@ function expectedFor(b: Business): Expected {
   const currentLiabilities = at("current-liability") + at("borrowing");
   const totalEquity = at("stock") + endingRE;
   if (totalAssets !== currentLiabilities + totalEquity) throw new Error(`${b.name}: the balance sheet doesn't balance`);
+
+  // Cash flow, direct method: each entry's cash, in its section.
+  const flows: Record<Section, number> = { operating: 0, investing: 0, financing: 0 };
+  for (const t of b.txns) {
+    const cash = t.dr.filter(([a]) => name(a) === "Cash").reduce((sum, [, c]) => sum + c, 0) - t.cr.filter(([a]) => name(a) === "Cash").reduce((sum, [, c]) => sum + c, 0);
+    if (cash !== 0) flows[sectionOf(t, name)] += cash;
+  }
+  const beginningCash = (b.opening ?? []).filter(([a]) => name(a) === "Cash").reduce((sum, [, c]) => sum + c, 0);
+  const netChange = flows.operating + flows.investing + flows.financing;
+  const endingCash = beginningCash + netChange;
+  if (endingCash !== at("cash")) throw new Error(`${b.name}: the cash flows don't reach the cash balance`);
+
+  // Indirect method, the textbook way: net income, depreciation added back,
+  // then the change in each working capital account over the month. No
+  // sample buys equipment on account, so every such change is operating.
+  const change = new Map<string, number>();
+  for (const t of b.txns) {
+    for (const [a, c] of t.dr) change.set(name(a), (change.get(name(a)) ?? 0) + c);
+    for (const [a, c] of t.cr) change.set(name(a), (change.get(name(a)) ?? 0) - c);
+  }
+  const depreciation = change.get("Depreciation Expense") ?? 0;
+  const workingCapital = (place: Place) => {
+    const out: Record<string, string> = {};
+    let sum = 0;
+    for (const account of Object.keys(ACCOUNTS)) {
+      const debitIncrease = change.get(account) ?? 0;
+      if (ACCOUNTS[account]!.place !== place || debitIncrease === 0) continue;
+      // More assets or fewer liabilities means cash was used.
+      out[account] = dollars(-debitIncrease);
+      sum -= debitIncrease;
+    }
+    return { out, sum };
+  };
+  const ca = workingCapital("current-asset");
+  const cl = workingCapital("current-liability");
+  const indirectOperating = netIncome + depreciation + ca.sum + cl.sum;
+  if (indirectOperating !== flows.operating) throw new Error(`${b.name}: the indirect method doesn't reach the direct method's operating total`);
   const last = DAYS_IN[b.month - 1]!;
   return {
     book: b.name,
@@ -459,6 +531,21 @@ function expectedFor(b: Business): Expected {
       retainedEarnings: dollars(endingRE),
       totalEquity: dollars(totalEquity),
       totalLiabilitiesAndEquity: dollars(currentLiabilities + totalEquity),
+    },
+    cashFlow: {
+      operating: dollars(flows.operating),
+      investing: dollars(flows.investing),
+      financing: dollars(flows.financing),
+      netChange: dollars(netChange),
+      beginningCash: dollars(beginningCash),
+      endingCash: dollars(endingCash),
+      indirect: {
+        netIncome: dollars(netIncome),
+        depreciation: dollars(depreciation),
+        currentAssets: ca.out,
+        currentLiabilities: cl.out,
+        operating: dollars(indirectOperating),
+      },
     },
   };
 }

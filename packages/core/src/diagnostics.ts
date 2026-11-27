@@ -47,6 +47,7 @@ export const diagnosticDefaults = {
   "zero-amount": "warning",
   "inferred-amount": "hint",
   "outside-period": "hint",
+  "inferred-cash-section": "hint",
   // Reading the shorthand
   "unreadable-line": "error",
   "invalid-amount": "error",
@@ -75,6 +76,7 @@ export const diagnosticLabels: Record<DiagnosticCode, string> = {
   "zero-amount": "A line amount is zero",
   "inferred-amount": "A blank amount was filled in",
   "outside-period": "An entry falls outside the book's period",
+  "inferred-cash-section": "A cash entry's cash flow section was inferred",
   "unreadable-line": "A line can't be read",
   "invalid-amount": "An amount can't be read",
   "invalid-date": "A date can't be read or doesn't exist",

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { cashSections } from "../cashflow.js";
 import { effectiveGroup } from "../groups.js";
 import type { Line } from "../types.js";
 import { parse } from "./parse.js";
@@ -87,6 +88,12 @@ const expectations: (((r: ParseResult) => void) | { skip: string })[] = [
       ["Accumulated Depreciation, Vans", undefined, "property-plant-equipment"],
       ["Term Loan", "long-term-liabilities", "long-term-liabilities"],
       ["Owner Drawings", "dividends", "dividends"],
+    ]),
+  // Cash flow sections
+  (r) =>
+    expect([...cashSections(r.book)].map(([id, c]) => [id, c.section, c.inferred, c.basis?.name])).toEqual([
+      ["e1", "investing", true, "Equipment"],
+      ["e2", "operating", false, undefined],
     ]),
   { skip: "the grammar, in EBNF" },
   { skip: "hledger and shorthand side by side; the hledger half is tested with the importer" },

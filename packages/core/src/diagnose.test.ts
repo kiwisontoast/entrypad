@@ -8,8 +8,13 @@ import type { SettingValue } from "./settings.js";
 import type { Book } from "./types.js";
 
 const today = new Date(2026, 5, 1);
-const s = (key?: string, value?: SettingValue) =>
-  key === undefined ? defaultSettings() : setSetting(defaultSettings(), key, value!);
+/**
+ * Most tests here are about other checks, and nearly every cash entry
+ * draws an inferred-cash-section hint, so that check is off unless a test
+ * turns it on.
+ */
+const base = setSetting(defaultSettings(), "diagnostics.inferred-cash-section", "off");
+const s = (key?: string, value?: SettingValue) => (key === undefined ? base : setSetting(base, key, value!));
 const check = (text: string, settings = s()) => {
   const { book } = parse(text, settings, { today });
   return { book, findings: diagnose(book, settings) };
@@ -53,6 +58,7 @@ describe("diagnose", () => {
       "zero-amount",
       "inferred-amount",
       "outside-period",
+      "inferred-cash-section",
     ]);
     for (const r of bookRules) expect(defaultSettings().diagnostics).toHaveProperty(r.code, r.severity);
   });
@@ -76,7 +82,7 @@ describe("diagnose", () => {
       check: (book) => book.entries.filter((e) => e.lines.some((l) => l.amount >= 1_000_000)).map((e) => ({ message: "Large", target: { entry: e.id } })),
     };
     const { book } = parse(clean);
-    const findings = diagnose(book, defaultSettings(), [...bookRules, bigEntries]);
+    const findings = diagnose(book, s(), [...bookRules, bigEntries]);
     expect(findings.map((d) => [d.code, d.severity, d.target.entry])).toEqual([["large-entry", "hint", "e1"]]);
   });
 });
@@ -96,7 +102,7 @@ describe("unbalanced-entry", () => {
     expect(d.fixes!.map((f) => f.label)).toEqual(["Put the difference on line 1: Equipment $8,500"]);
     const fixed = d.fixes![0]!.apply(book);
     expect(fixed.entries[0]!.lines[0]!.amount).toBe(850_000);
-    expect(diagnose(fixed).map((f) => f.code)).not.toContain("unbalanced-entry");
+    expect(diagnose(fixed, s()).map((f) => f.code)).not.toContain("unbalanced-entry");
     expect(book.entries[0]!.lines[0]!.amount).toBe(800_000);
   });
 
@@ -143,7 +149,7 @@ describe("unknown-account", () => {
     expect(d.message).toBe('"Comon Stock" isn\'t in the chart of accounts');
     expect(slice(text, d.target.source)).toBe("Comon Stock");
     expect(d.fixes![0]!.label).toBe("Change to Common Stock");
-    expect(diagnose(d.fixes![0]!.apply(book))).toEqual([]);
+    expect(diagnose(d.fixes![0]!.apply(book), s())).toEqual([]);
   });
 
   it("offers no fixes when suggestions are turned off", () => {
@@ -216,7 +222,7 @@ describe("zero-amount, inferred-amount and outside-period", () => {
     expect(slice(text, d.target.source)).toBe("Service Revenue");
     const fixed = d.fixes![0]!.apply(book);
     expect(fixed.entries[0]!.lines[1]).toEqual({ account: "service-revenue", side: "cr", amount: 300_000, source: book.entries[0]!.lines[1]!.source });
-    expect(diagnose(fixed)).toEqual([]);
+    expect(diagnose(fixed, s())).toEqual([]);
   });
 
   it("hints at an entry dated outside the period", () => {

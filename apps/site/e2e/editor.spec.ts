@@ -27,8 +27,12 @@ test.describe("editor", () => {
     await expect(page.locator("h1")).toHaveText("Sunrise Bakery");
     await expect(page.locator("#status")).toHaveText("No problems");
     await expect(page.locator("#t-cash")).toBeVisible();
-    // The catering bill's blank amount gets a hint.
-    await expect(page.locator(".cm-lintRange-hint")).toHaveCount(1);
+    // Only hints: the catering bill's blank amount, and the cash entries
+    // without a cash flow tag, whose section is inferred. Each is underlined.
+    const hints = await page.evaluate(() => window.__editor.analysis().findings.map((f) => `${f.severity} ${f.code}`));
+    expect(hints.filter((h) => h === "hint inferred-amount")).toHaveLength(1);
+    expect(hints.every((h) => h === "hint inferred-amount" || h === "hint inferred-cash-section")).toBe(true);
+    await expect(page.locator(".cm-lintRange-hint")).toHaveCount(hints.length);
     expect(errors).toEqual([]);
   });
 
