@@ -225,7 +225,7 @@ show equation
 show cash-flow: indirect
 ```
 
-This picks the visuals a slide displays, in order. The Phase 1 visuals are `entry-cards`, `t-accounts`, `equation`, `statement-flow`, `cash-flow`, `trial-balance` and `schedule`. Options follow a colon. For `t-accounts` they are the accounts to draw; for `cash-flow` they are `direct` or `indirect`. Without any `show` lines, the editor chooses a default view.
+This picks the visuals a slide displays, in order. The Phase 1 visuals are `entry-cards`, `t-accounts`, `equation`, `statement-flow`, `cash-flow`, `trial-balance` and `schedule`. Options follow a colon. For `t-accounts` they are the accounts to draw, and for `trial-balance` the accounts to list; for `cash-flow` they are `direct` or `indirect`. Without any `show` lines, the editor chooses a default view.
 
 ### `set`
 

@@ -1,6 +1,6 @@
 import { matchAccount, parse } from "@entrypad/core";
 import type { Book } from "@entrypad/core";
-import { EntryCards, Equation, HighlightProvider, TAccount } from "@entrypad/react";
+import { EntryCards, Equation, HighlightProvider, StatementFlow, TAccount, TrialBalance } from "@entrypad/react";
 import { StrictMode, useEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -15,12 +15,13 @@ import "./embed.css";
  * change what this viewer sees.
  *
  * URL: /embed/?visual=t-accounts#v1:<book>. `visual` is t-accounts,
- * equation or entry-cards; without it, the book's first show line that
- * names one of them, else t-accounts. `at=n` starts after n entries.
+ * equation, entry-cards, trial-balance or statement-flow; without it, the
+ * book's first show line that names one of them, else t-accounts. `at=n`
+ * starts after n entries.
  */
 
-type VisualName = "t-accounts" | "equation" | "entry-cards";
-const VISUALS: readonly VisualName[] = ["t-accounts", "equation", "entry-cards"];
+type VisualName = "t-accounts" | "equation" | "entry-cards" | "trial-balance" | "statement-flow";
+const VISUALS: readonly VisualName[] = ["t-accounts", "equation", "entry-cards", "trial-balance", "statement-flow"];
 const isVisual = (v: string | null | undefined): v is VisualName => VISUALS.includes(v as VisualName);
 
 const params = new URLSearchParams(location.search);
@@ -36,9 +37,9 @@ declare global {
   }
 }
 
-/** Accounts a `show t-accounts:` line names, as ids. */
-function namedAccounts(book: Book): string[] | undefined {
-  const names = parsed?.shows.filter((s) => s.visual === "t-accounts").flatMap((s) => s.options) ?? [];
+/** Accounts a `show t-accounts:` (or `show trial-balance:`) line names, as ids. */
+function namedAccounts(book: Book, name: VisualName = "t-accounts"): string[] | undefined {
+  const names = parsed?.shows.filter((s) => s.visual === name).flatMap((s) => s.options) ?? [];
   const ids = names.map((n) => matchAccount(n, book.chart, parsed!.resolved)?.id).filter((id): id is string => id !== undefined);
   return ids.length ? ids : undefined;
 }
@@ -99,10 +100,13 @@ function Player({ initial }: { initial: Book }) {
   const shown = at >= count ? undefined : at;
   const common = { book, onBookChange: setBook, showDiagnostics: false, maxWidth: width - 16, ...(shown !== undefined && { at: shown }) };
   const accounts = namedAccounts(book);
+  const tbAccounts = namedAccounts(book, "trial-balance");
   const view: Record<VisualName, () => ReactElement> = {
     "t-accounts": () => <TAccount {...common} {...(accounts && { accounts })} />,
     equation: () => <Equation {...common} />,
     "entry-cards": () => <EntryCards {...common} />,
+    "trial-balance": () => <TrialBalance {...common} {...(tbAccounts && { accounts: tbAccounts })} />,
+    "statement-flow": () => <StatementFlow {...common} />,
   };
 
   return (

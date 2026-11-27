@@ -1,6 +1,6 @@
 import { diagnose, parse } from "@entrypad/core";
 import type { Book } from "@entrypad/core";
-import { EntryCards, Equation, HighlightProvider, TAccount } from "@entrypad/react";
+import { EntryCards, Equation, HighlightProvider, StatementFlow, TAccount, TrialBalance } from "@entrypad/react";
 import { Profiler, StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import bakery from "../../../../examples/sunrise-bakery.entrypad?raw";
@@ -63,7 +63,8 @@ function App() {
           <h1>Visuals</h1>
           <p>
             {book.name}: {count} entries. Hover a line to light up its entry everywhere. Drag a card line to the other column
-            to flip its side, or a T-account amount onto another account to reclassify it.
+            to flip its side, or a T-account amount onto another account to reclassify it. Drag a revenue or expense
+            figure on the income statement up or down to change it.
           </p>
           <div className="controls">
             <button type="button" id="prev" onClick={() => step(-1)}>
@@ -101,6 +102,12 @@ function App() {
         </section>
         <section id="cards">
           <EntryCards book={book} onBookChange={setBook} {...(at !== undefined && { at })} showDiagnostics diagnostics={diagnostics} maxWidth={width} />
+        </section>
+        <section id="trial-balance">
+          <TrialBalance book={book} {...(at !== undefined && { at })} showDiagnostics maxWidth={width} />
+        </section>
+        <section id="statement-flow">
+          <StatementFlow book={book} onBookChange={setBook} {...(at !== undefined && { at })} showDiagnostics maxWidth={width} onDragStatus={perf.onStatus} />
         </section>
       </main>
     </HighlightProvider>

@@ -8,5 +8,5 @@ export * from "@entrypad/react";
 
 // Names both core and react use: the component comes from react, and core's
 // type travels under a longer name.
-export { Equation } from "@entrypad/react";
-export type { Equation as EquationTotals } from "@entrypad/core";
+export { Equation, TrialBalance } from "@entrypad/react";
+export type { Equation as EquationTotals, TrialBalance as TrialBalanceFigures } from "@entrypad/core";

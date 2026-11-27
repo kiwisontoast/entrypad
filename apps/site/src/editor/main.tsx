@@ -4,7 +4,7 @@ import { EditorState } from "@codemirror/state";
 import { drawSelection, EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers } from "@codemirror/view";
 import { matchAccount, resolveSettings } from "@entrypad/core";
 import type { Book, EntrypadSettings } from "@entrypad/core";
-import { EntryCards, Equation, HighlightProvider, SettingsPanel, TAccount, theme } from "@entrypad/react";
+import { EntryCards, Equation, HighlightProvider, SettingsPanel, StatementFlow, TAccount, theme, TrialBalance } from "@entrypad/react";
 import { StrictMode, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import bikes from "../../../../examples/spoke-and-chain-bikes.entrypad?raw";
@@ -69,7 +69,14 @@ function download(blob: Blob, name: string): void {
 }
 
 /** The visual an embed link shows, from the book's first show line it can draw. */
-const EMBEDDABLE = ["t-accounts", "equation", "entry-cards"];
+const EMBEDDABLE = ["t-accounts", "equation", "entry-cards", "trial-balance", "statement-flow"];
+
+/** Accounts the book's `show` lines for one visual name, as ids; undefined when they name none. */
+function namedAccounts({ shows, book, resolved }: Analysis, visual: string): string[] | undefined {
+  const named = shows.filter((s) => s.visual === visual).flatMap((s) => s.options);
+  const ids = named.map((n) => matchAccount(n, book.chart, resolved)?.id).filter((id): id is string => id !== undefined);
+  return ids.length ? ids : undefined;
+}
 
 const editorTheme = EditorView.theme({
   "&": { height: "100%", fontSize: "13.5px", backgroundColor: theme.surface },
@@ -103,6 +110,8 @@ function App() {
   const equationEl = useRef<HTMLElement>(null);
   const tAccountsEl = useRef<HTMLElement>(null);
   const cardsEl = useRef<HTMLElement>(null);
+  const trialBalanceEl = useRef<HTMLElement>(null);
+  const statementFlowEl = useRef<HTMLElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [shareStatus, setShareStatus] = useState("");
@@ -110,7 +119,7 @@ function App() {
   settingsRef.current = settings;
 
   const analysis = analyse(text, settings);
-  const { book, resolved, findings } = analysis;
+  const { book, findings } = analysis;
 
   useEffect(() => {
     const view = new EditorView({
@@ -220,11 +229,9 @@ function App() {
   };
 
   // `show t-accounts: ...` lines pick the T-accounts; otherwise every account in use.
-  const tAccounts = useMemo(() => {
-    const named = analysis.shows.filter((s) => s.visual === "t-accounts").flatMap((s) => s.options);
-    const ids = named.map((n) => matchAccount(n, book.chart, resolved)?.id).filter((id): id is string => id !== undefined);
-    return ids.length ? ids : undefined;
-  }, [analysis, book.chart, resolved]);
+  const tAccounts = useMemo(() => namedAccounts(analysis, "t-accounts"), [analysis]);
+  // `show trial-balance: ...` lines pick its rows the same way; otherwise every account with a balance.
+  const tbAccounts = useMemo(() => namedAccounts(analysis, "trial-balance"), [analysis]);
 
   const count = book.entries.length;
   const shownAt = at === undefined || at >= count ? undefined : at;
@@ -355,6 +362,41 @@ function App() {
               count={count}
               shareLink={shareLink}
               renderAt={(n) => <EntryCards book={book} at={n} maxWidth={width} />}
+            />
+          </section>
+          <section id="trial-balance" ref={trialBalanceEl}>
+            <TrialBalance
+              book={book}
+              {...(shownAt !== undefined && { at: shownAt })}
+              {...(tbAccounts && { accounts: tbAccounts })}
+              showDiagnostics={display.showDiagnostics}
+              maxWidth={width}
+            />
+            <ExportMenu
+              section={trialBalanceEl}
+              fileName={slug(book.name ?? "book", "trial-balance")}
+              settings={settings}
+              count={count}
+              shareLink={shareLink}
+              renderAt={(n) => <TrialBalance book={book} at={n} {...(tbAccounts && { accounts: tbAccounts })} maxWidth={width} />}
+            />
+          </section>
+          <section id="statement-flow" ref={statementFlowEl}>
+            <StatementFlow
+              book={book}
+              onBookChange={onBookChange}
+              {...(shownAt !== undefined && { at: shownAt })}
+              showDiagnostics={display.showDiagnostics}
+              maxWidth={width}
+              {...interaction}
+            />
+            <ExportMenu
+              section={statementFlowEl}
+              fileName={slug(book.name ?? "book", "statements")}
+              settings={settings}
+              count={count}
+              shareLink={shareLink}
+              renderAt={(n) => <StatementFlow book={book} at={n} maxWidth={width} />}
             />
           </section>
         </div>
