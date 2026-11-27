@@ -92,7 +92,9 @@ declare global {
 
 function App() {
   const [settings, setSettings] = useState<EntrypadSettings>(loadSettings);
-  const [text, setText] = useState(() => EXAMPLES[firstExample]?.text ?? EXAMPLES.bakery!.text);
+  // CodeMirror keeps lines joined by "\n" whatever the source used, and the
+  // text kept here must match it exactly, or drags can't find their entries.
+  const [text, setText] = useState(() => (EXAMPLES[firstExample]?.text ?? EXAMPLES.bakery!.text).replace(/\r\n?/g, "\n"));
   const [example, setExample] = useState(EXAMPLES[firstExample] ? firstExample : "bakery");
   const [at, setAt] = useState<number | undefined>(undefined);
   const [width, setWidth] = useState(720);
