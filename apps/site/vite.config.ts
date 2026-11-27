@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { shorthandReference } from "./src/docs/plugin.js";
 
 const root = import.meta.dirname;
 
@@ -15,7 +16,7 @@ const profile = process.env.ENTRYPAD_PROFILE === "1";
 const internal = profile || process.env.ENTRYPAD_INTERNAL === "1";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), shorthandReference(resolve(root, "../../docs/shorthand.md"))],
   resolve: {
     alias: profile ? [{ find: /^react-dom\/client$/, replacement: "react-dom/profiling" }] : [],
   },
@@ -35,6 +36,8 @@ export default defineConfig({
           markdown: resolve(root, "markdown/index.html"),
           // The new landing page, previewed here until it replaces the placeholder at launch.
           home: resolve(root, "home/index.html"),
+          // The shorthand reference, in American English for the site; public at launch.
+          docs: resolve(root, "docs/index.html"),
         }),
       },
     },

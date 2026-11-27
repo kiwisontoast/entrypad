@@ -1,6 +1,6 @@
 # The Entrypad shorthand
 
-Status: draft. This describes the format the Phase 1 parser will read. Details may change before the first release.
+Status: draft. This describes the format the parser reads. Details may change before the first release.
 
 An Entrypad book is a plain-text file with the `.entrypad` extension. It is laid out like a general journal on paper: a date and a memo, the debit lines, then the credit lines indented beneath them. Anyone who can journalise can write it with very little to learn.
 
