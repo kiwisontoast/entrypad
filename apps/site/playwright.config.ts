@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
+// ENTRYPAD_E2E_PORT lets a second checkout (a git worktree) run its own
+// server alongside this one.
+const port = Number(process.env.ENTRYPAD_E2E_PORT ?? 4173);
 
 export default defineConfig({
   testDir: "e2e",
@@ -11,7 +14,7 @@ export default defineConfig({
   retries: isCI ? 1 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://localhost:4173",
+    baseURL: `http://localhost:${port}`,
     ...devices["Desktop Chrome"],
     // Tall enough for the whole 30-account board without scrolling.
     viewport: { width: 1280, height: 1100 },
@@ -20,9 +23,9 @@ export default defineConfig({
   },
   webServer: {
     // A profiling build, so the perf tests can read React commit times.
-    command: "pnpm exec vite build && pnpm exec vite preview --outDir dist-profile",
+    command: `pnpm exec vite build && pnpm exec vite preview --outDir dist-profile --port ${port}`,
     env: { ENTRYPAD_PROFILE: "1" },
-    url: "http://localhost:4173/spike/",
+    url: `http://localhost:${port}/spike/`,
     reuseExistingServer: !isCI,
     timeout: 120_000,
   },
