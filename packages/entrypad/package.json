@@ -1,0 +1,59 @@
+{
+  "name": "entrypad",
+  "version": "0.1.0",
+  "description": "Live, draggable accounting visuals for presentations and reports: T-accounts, journal entries, the accounting equation and the financial statements, all from one journal.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean --external react --external react-dom",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@entrypad/core": "workspace:*",
+    "@entrypad/export": "workspace:*",
+    "@entrypad/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsup": "9.0.0",
+    "typescript": "6.0.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiwisontoast/entrypad.git",
+    "directory": "packages/entrypad"
+  },
+  "homepage": "https://entrypad.devshroff.com",
+  "bugs": "https://github.com/kiwisontoast/entrypad/issues",
+  "keywords": [
+    "accounting",
+    "double-entry",
+    "journal-entries",
+    "t-accounts",
+    "financial-statements",
+    "react",
+    "visualization"
+  ]
+}

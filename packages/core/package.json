@@ -1,7 +1,6 @@
 {
   "name": "@entrypad/core",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "The Entrypad book model: chart of accounts, journal entries and the views derived from them.",
   "license": "MIT",
   "type": "module",
@@ -30,5 +29,21 @@
     "tsup": "9.0.0",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiwisontoast/entrypad.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://entrypad.devshroff.com",
+  "bugs": "https://github.com/kiwisontoast/entrypad/issues",
+  "keywords": [
+    "accounting",
+    "double-entry",
+    "journal-entries",
+    "t-accounts",
+    "financial-statements",
+    "parser",
+    "ledger"
+  ]
 }

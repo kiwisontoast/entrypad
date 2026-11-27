@@ -1,7 +1,6 @@
 {
   "name": "@entrypad/markdown",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Render entrypad code blocks in Markdown as Entrypad visuals, with remark or markdown-it.",
   "license": "MIT",
   "type": "module",
@@ -51,5 +50,23 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiwisontoast/entrypad.git",
+    "directory": "packages/markdown"
+  },
+  "homepage": "https://entrypad.devshroff.com",
+  "bugs": "https://github.com/kiwisontoast/entrypad/issues",
+  "keywords": [
+    "accounting",
+    "double-entry",
+    "journal-entries",
+    "t-accounts",
+    "financial-statements",
+    "markdown",
+    "remark",
+    "markdown-it",
+    "marp"
+  ]
 }

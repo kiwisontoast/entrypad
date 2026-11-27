@@ -108,6 +108,37 @@ importers:
         specifier: 5.1.0
         version: 5.1.0(@types/node@24.19.2)(happy-dom@21.0.4)(vite@8.3.7(@types/node@24.19.2)(esbuild@0.28.2))
 
+  packages/entrypad:
+    dependencies:
+      '@entrypad/core':
+        specifier: workspace:*
+        version: link:../core
+      '@entrypad/export':
+        specifier: workspace:*
+        version: link:../export
+      '@entrypad/react':
+        specifier: workspace:*
+        version: link:../react
+    devDependencies:
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.3.1
+        version: 19.3.1(react@19.3.1)
+      tsup:
+        specifier: 9.0.0
+        version: 9.0.0(postcss@8.5.32)(typescript@6.0.3)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
   packages/export:
     dependencies:
       gifenc:

@@ -1,7 +1,6 @@
 {
   "name": "@entrypad/export",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Export Entrypad visuals as standalone SVG, PNG and GIF files.",
   "license": "MIT",
   "type": "module",
@@ -25,13 +24,30 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
+  "dependencies": {
+    "gifenc": "1.0.3"
+  },
   "devDependencies": {
     "happy-dom": "^21.0.4",
     "tsup": "9.0.0",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
   },
-  "dependencies": {
-    "gifenc": "1.0.3"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiwisontoast/entrypad.git",
+    "directory": "packages/export"
+  },
+  "homepage": "https://entrypad.devshroff.com",
+  "bugs": "https://github.com/kiwisontoast/entrypad/issues",
+  "keywords": [
+    "accounting",
+    "double-entry",
+    "journal-entries",
+    "t-accounts",
+    "financial-statements",
+    "svg",
+    "png",
+    "gif"
+  ]
 }
