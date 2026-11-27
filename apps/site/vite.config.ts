@@ -33,6 +33,8 @@ export default defineConfig({
           editor: resolve(root, "editor/index.html"),
           embed: resolve(root, "embed/index.html"),
           markdown: resolve(root, "markdown/index.html"),
+          // The new landing page, previewed here until it replaces the placeholder at launch.
+          home: resolve(root, "home/index.html"),
         }),
       },
     },

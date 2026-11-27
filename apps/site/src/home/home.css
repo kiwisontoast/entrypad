@@ -1,0 +1,297 @@
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --text: #1f2a37;
+  --muted: #5b6573;
+  --rule: #dcd8cf;
+  --link: #1d4e89;
+  --code-bg: #f1efe9;
+  --serif: var(--font-heading);
+  --sans: var(--font-text);
+  --mono: var(--font-mono);
+  --column: 40rem;
+  --wide: 60rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+a:focus-visible,
+button:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 1.25rem 1rem;
+}
+
+.wordmark {
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.top nav,
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+
+.top nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.top nav a:hover {
+  color: var(--text);
+}
+
+main > section {
+  max-width: var(--column);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+main > section + section {
+  margin-top: 5rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  margin: 3rem 0 1.25rem;
+  font-size: clamp(2.1rem, 5.5vw, 3rem);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-size: 1.75rem;
+}
+
+h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.lede {
+  font-size: 1.1875rem;
+}
+
+/* Figures can be wider than the text column. */
+.demo,
+.gallery,
+.try {
+  width: min(var(--wide), calc(100vw - 2rem));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.demo {
+  margin-top: 2rem;
+  margin-bottom: 0;
+}
+
+.demo figcaption {
+  max-width: var(--column);
+  margin: 0.75rem auto 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.fallback {
+  padding: 2rem;
+  border: 1px dashed var(--rule);
+  color: var(--muted);
+  text-align: center;
+}
+
+.steps {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.75rem;
+}
+
+.steps > li + li {
+  margin-top: 2.5rem;
+}
+
+.steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  color: var(--muted);
+  font-family: var(--serif);
+  line-height: 1.8rem;
+  text-align: center;
+}
+
+pre {
+  margin: 1rem 0;
+  padding: 0.875rem 1rem;
+  overflow-x: auto;
+  border-radius: 6px;
+  background: var(--code-bg);
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+}
+
+.island {
+  margin-top: 1rem;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.card p {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.card-figure {
+  flex: 1;
+  min-width: 0;
+}
+
+.open {
+  margin-top: 1rem;
+  font-size: 0.9375rem;
+}
+
+.try {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.try-label {
+  font-weight: 600;
+}
+
+.try textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+footer {
+  max-width: var(--column);
+  margin: 6rem auto 0;
+  padding: 2rem 1rem 3rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+footer p {
+  margin: 0.75rem 0 0;
+}
+
+/* The visuals are inline blocks; centre them in their figure. */
+.demo .island,
+.card-figure,
+.try > div {
+  text-align: center;
+}

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Entrypad: accounting visuals that move with the books</title>
+    <meta
+      name="description"
+      content="Entrypad turns journal entries into live, draggable accounting visuals for presentations and reports: T-accounts, the accounting equation and the financial statements, all from one journal."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231f2a37'/%3E%3Cpath d='M7 10h18M16 10v14' stroke='%23f5f3ee' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <script type="module" src="/src/home/main.tsx"></script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="wordmark" href="/">Entrypad</a>
+      <nav aria-label="Site">
+        <a href="/editor/">Editor</a>
+        <a href="#developers">For developers</a>
+        <a href="https://github.com/kiwisontoast/entrypad">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <h1 id="hero-title">What if accounting visuals moved the way the books do?</h1>
+        <p class="lede">
+          Entrypad draws T-accounts, the accounting equation and the financial statements from your journal entries.
+          Drag a transaction onto the books and every view updates with it.
+        </p>
+        <figure class="demo">
+          <div id="hero-demo" class="island"><p class="fallback">Turn on JavaScript to try the live demo.</p></div>
+          <figcaption>
+            Each card has one side missing. Drag it onto the account it belongs to, or drag a posted amount to another
+            account. <button type="button" id="hero-reset" class="text-button">Start over</button>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <ol class="steps">
+          <li>
+            <h3>Write the entries</h3>
+            <p>
+              Write the general journal the way you already do: date and memo, debits flush left, credits indented.
+              Paste rows from a spreadsheet or open an hledger journal if you have one.
+            </p>
+            <pre class="shorthand" id="step-text"></pre>
+          </li>
+          <li>
+            <h3>See the books</h3>
+            <p>Entrypad works out the T-accounts, the equation and the statements from those lines, to the cent.</p>
+            <div id="step-books" class="island"></div>
+          </li>
+          <li>
+            <h3>Drag to change them</h3>
+            <p>
+              Drag an amount up or down to change it, or onto another account to reclassify it. The text and every other
+              view follow.
+            </p>
+            <div id="step-drag" class="island"></div>
+          </li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="gallery-title">
+        <h2 id="gallery-title">The visuals</h2>
+        <p>One journal drives all of them, so they always agree. Each one works in place; open any in the editor to change the book.</p>
+        <div id="gallery" class="gallery"></div>
+      </section>
+
+      <section aria-labelledby="try-title">
+        <h2 id="try-title">Try it</h2>
+        <p>
+          Edit the entries and watch the books change. Mistakes don't stop anything: the full editor underlines them as
+          you type.
+        </p>
+        <div id="try" class="island"></div>
+      </section>
+
+      <section id="developers" aria-labelledby="dev-title">
+        <h2 id="dev-title">For developers</h2>
+        <p>Entrypad is a TypeScript library for React. Install it from npm:</p>
+        <pre class="code"><code>npm install entrypad</code></pre>
+        <p>Then give any visual a book:</p>
+        <pre class="code"><code id="dev-example"></code></pre>
+        <p>
+          Every visual exports to SVG, PNG and GIF, and <code>@entrypad/markdown</code> draws <code>entrypad</code> code
+          blocks in docs sites and Markdown slide decks.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <nav aria-label="Project">
+        <a href="https://github.com/kiwisontoast/entrypad">GitHub</a>
+        <a href="https://www.npmjs.com/package/entrypad">npm</a>
+        <a href="https://github.com/kiwisontoast/entrypad/blob/main/LICENSE">MIT License</a>
+      </nav>
+      <p>
+        Built on <a href="https://github.com/declarative-dragging/dragology">Dragology</a> and inspired by
+        <a href="https://declarative-dragging.github.io/">Declarative Dragging</a>.
+      </p>
+    </footer>
+  </body>
+</html>
