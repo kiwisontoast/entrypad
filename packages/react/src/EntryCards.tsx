@@ -15,14 +15,15 @@ import {
   money,
   resolveTheme,
   squiggle,
+  staticSvg,
   useDragReporter,
   useFindings,
   viewBook,
   VisualShell,
 } from "./visual.js";
-import type { InteractionProps, VisualProps } from "./visual.js";
+import type { InteractionProps, StaticProps, VisualProps } from "./visual.js";
 
-export type EntryCardsProps = VisualProps & InteractionProps;
+export type EntryCardsProps = VisualProps & InteractionProps & StaticProps;
 
 interface CState {
   book: Book;
@@ -260,7 +261,7 @@ export function EntryCards(props: EntryCardsProps) {
   const report = useDragReporter(store, onDragStatus);
 
   const layout = useMemo(() => place(view.entries, maxWidth), [view.entries, maxWidth]);
-  const editable = onBookChange !== undefined;
+  const editable = onBookChange !== undefined && !props.staticRender;
   const draggable = useMemo(
     () => makeDraggable(layout, findings, theme, staticPartsAsComponents, editable),
     [layout, findings, theme, staticPartsAsComponents, editable],
@@ -286,6 +287,8 @@ export function EntryCards(props: EntryCardsProps) {
       },
     }),
   };
+
+  if (props.staticRender) return staticSvg(draggable, state, layout.width, layout.height, theme, "Journal entries");
 
   return (
     <VisualShell

@@ -1,9 +1,9 @@
 import { diagnose, formatCents } from "@entrypad/core";
 import type { Account, Book, Diagnostic } from "@entrypad/core";
 import { renderStateReadOnly } from "dragology";
-import type { DragSpec, DragSpecBuilder, LayeredSvgx } from "dragology";
-import { useCallback, useMemo, useRef } from "react";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { Draggable, DragSpec, DragSpecBuilder, LayeredSvgx } from "dragology";
+import { Children, createElement, isValidElement, useCallback, useMemo, useRef } from "react";
+import type { HTMLAttributes, ReactElement, ReactNode } from "react";
 import type { Highlight, HighlightStore } from "./highlight.js";
 import { usePointerGuard } from "./pointerGuard.js";
 import { theme as defaultTheme } from "./theme.js";
@@ -26,6 +26,47 @@ export interface VisualProps {
   theme?: Theme;
   /** Width available, in pixels; the layout fits itself inside it. */
   maxWidth?: number;
+}
+
+/**
+ * Draws a visual as plain SVG, without the drag engine: for rendering on a
+ * server (Markdown, static pages) or anywhere nothing should move. Nothing
+ * can be dragged, and no browser APIs are touched, so it works with
+ * `renderToStaticMarkup`.
+ */
+export interface StaticProps {
+  staticRender?: boolean;
+}
+
+/** Strips the drag engine's own props from a drawn tree, so React renders it as plain SVG. */
+function plain(node: ReactNode): ReactNode {
+  if (!isValidElement<Record<string, unknown>>(node)) return node;
+  // Components (memoised static parts) draw themselves.
+  if (typeof node.type !== "string") return node;
+  const props: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(node.props)) {
+    if (k.startsWith("dragology") || k === "children" || typeof v === "function") continue;
+    props[k] = v;
+  }
+  return createElement(node.type, props, ...Children.toArray(node.props.children as ReactNode).map(plain));
+}
+
+/**
+ * A draggable's drawing of one state, as plain SVG: what the drag engine
+ * would show before anything moves. `draw` is the draggable itself; it is
+ * given no drag builder, so it must only use one inside drag callbacks.
+ */
+export function staticSvg<T extends object>(draw: Draggable<T>, state: T, width: number, height: number, theme: Theme, label: string): ReactElement {
+  // No drag builder: in static mode the draw function never starts a drag.
+  const props = { state, d: undefined, draggedId: null, setState: () => {}, isTracking: false };
+  const tree = draw(props as unknown as Parameters<Draggable<T>>[0]);
+  return (
+    <div role="img" aria-label={label} style={{ display: "inline-block", maxWidth: "100%", fontFamily: theme.font }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: "100%", height: "auto", display: "block" }}>
+        {plain(tree)}
+      </svg>
+    </div>
+  );
 }
 
 /** Performance and touch options, from the display settings. */

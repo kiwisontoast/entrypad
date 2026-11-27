@@ -20,15 +20,16 @@ import {
   withAmount,
   resolveTheme,
   squiggle,
+  staticSvg,
   useDragReporter,
   useFindings,
   useVisibleAccounts,
   viewBook,
   VisualShell,
 } from "./visual.js";
-import type { InteractionProps, VisualProps } from "./visual.js";
+import type { InteractionProps, StaticProps, VisualProps } from "./visual.js";
 
-export type TAccountProps = VisualProps & InteractionProps;
+export type TAccountProps = VisualProps & InteractionProps & StaticProps;
 
 interface TState {
   book: Book;
@@ -340,7 +341,7 @@ export function TAccount(props: TAccountProps) {
   movingRef.current = moving;
 
   const layout = computeLayout(accounts.length, maxWidth);
-  const editable = onBookChange !== undefined;
+  const editable = onBookChange !== undefined && !props.staticRender;
 
   /** Moves the picked-up posting to an account. */
   const moveTo = (accountId: string) => {
@@ -396,6 +397,8 @@ export function TAccount(props: TAccountProps) {
     [accounts, layout.cols, layout.tW, layout.width, layout.height, at, findings, theme, staticPartsAsComponents, editable],
   );
   const state = useMemo<TState>(() => ({ book, highlight: store.value, moving }), [book, store.value, moving]);
+
+  if (props.staticRender) return staticSvg(draggable, state, layout.width, layout.height, theme, "T-accounts");
 
   return (
     <VisualShell

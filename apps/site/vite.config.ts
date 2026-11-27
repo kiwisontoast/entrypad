@@ -32,6 +32,7 @@ export default defineConfig({
           // Internal until launch; ask the owner before making them public.
           editor: resolve(root, "editor/index.html"),
           embed: resolve(root, "embed/index.html"),
+          markdown: resolve(root, "markdown/index.html"),
         }),
       },
     },

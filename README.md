@@ -55,10 +55,11 @@ pnpm examples    # regenerate the sample books in examples/
 
 Before the first `pnpm e2e`, install the test browser once with `pnpm --filter @entrypad/site exec playwright install chromium`.
 
-`pnpm dev` also serves five development pages that aren't part of the published site:
+`pnpm dev` also serves six development pages that aren't part of the published site:
 
 - `/editor/`, the shorthand editor. Type entries on the left and the T-accounts, entry cards and accounting equation update on the right, with mistakes underlined as you type. Dragging in a visual rewrites the matching entry in the text. You can export each visual as SVG, PNG or a GIF of the month, and save a book as a file or share it as a link.
 - `/embed/`, which shows one visual from a link at full size, for putting in other tools through an iframe. The arrow keys, a swipe or the on-screen buttons step through the entries.
+- `/markdown/`, a docs page written in Markdown. Its `entrypad` code block is drawn as plain SVG on the page, then becomes draggable once the client script runs.
 - `/visuals/`, the same three visuals on a sample book, with step-through.
 - `/spike/`, the original prototype of dragging entries onto T-accounts.
 - `/fonts/`, a typeface comparison.
@@ -67,7 +68,7 @@ To try them on a phone, run `pnpm --filter @entrypad/site dev:phone` and open th
 
 `examples/` holds three sample books for invented businesses: a bakery, a bike shop and a consulting firm, one month each. Each has an `.expected.json` with its balances, trial balance totals and accounting equation. `examples/generate.ts` works those figures out with plain arithmetic and none of Entrypad's code, and the tests check Entrypad against them. Run `pnpm examples` to regenerate the books.
 
-The repo is a pnpm workspace. `packages/core` has no React dependency. It holds the book model, the shorthand parser, the checks behind the underlines, hledger import and export, and the ledger and equation views. `packages/react` holds the visuals, `packages/export` exports them as SVG, PNG and GIF, and `apps/site` is the website.
+The repo is a pnpm workspace. `packages/core` has no React dependency. It holds the book model, the shorthand parser, the checks behind the underlines, hledger and spreadsheet import, hledger export, and the views: ledger, accounting equation, trial balance, financial statements, cash flow statement and depreciation schedules. `packages/react` holds the visuals, `packages/export` exports them as SVG, PNG and GIF, `packages/markdown` draws `entrypad` code blocks in Markdown through remark or markdown-it plugins, and `apps/site` is the website.
 
 ## Credits
 

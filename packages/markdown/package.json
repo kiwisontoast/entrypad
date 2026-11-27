@@ -1,0 +1,55 @@
+{
+  "name": "@entrypad/markdown",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Render entrypad code blocks in Markdown as Entrypad visuals, with remark or markdown-it.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.tsx"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./client": {
+        "types": "./dist/client.d.ts",
+        "import": "./dist/client.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/client.tsx --format esm --dts --clean --external react --external react-dom",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@entrypad/core": "workspace:*",
+    "@entrypad/react": "workspace:*"
+  },
+  "devDependencies": {
+    "@marp-team/marp-core": "4.4.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "happy-dom": "21.0.4",
+    "markdown-it": "15.0.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remark": "15.0.1",
+    "remark-html": "16.0.1",
+    "tsup": "9.0.0",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
