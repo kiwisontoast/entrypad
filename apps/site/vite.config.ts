@@ -29,8 +29,9 @@ export default defineConfig({
           fonts: resolve(root, "fonts/index.html"),
           visuals: resolve(root, "visuals/index.html"),
           dev: resolve(root, "dev/index.html"),
-          // Internal until Phase 2; ask the owner before making it public.
+          // Internal until launch; ask the owner before making them public.
           editor: resolve(root, "editor/index.html"),
+          embed: resolve(root, "embed/index.html"),
         }),
       },
     },

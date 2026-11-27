@@ -163,3 +163,15 @@ select:hover {
 .export-status {
   color: var(--muted);
 }
+
+.share {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+}
+
+#share-status {
+  color: var(--muted);
+  font-size: 13px;
+}

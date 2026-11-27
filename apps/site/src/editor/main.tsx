@@ -13,6 +13,7 @@ import advisory from "../../../../examples/northfield-advisory.entrypad?raw";
 import "../typography.js";
 import { analyse, lintDiagnostics, writeBook } from "./analyse.js";
 import { ExportMenu, slug } from "./exportMenu.js";
+import { bookUrl, decodeBook, shareableText } from "../share.js";
 import type { Analysis } from "./analyse.js";
 import { shorthandLanguage } from "./language.js";
 import "./editor.css";
@@ -31,7 +32,10 @@ const EXAMPLES: Record<string, { label: string; text: string }> = {
 };
 
 const params = new URLSearchParams(location.search);
-const firstExample = params.get("example") ?? "bakery";
+// A share link carries the book in the hash; otherwise start from an example.
+const shared = decodeBook(location.hash);
+if (shared !== undefined) EXAMPLES.shared = { label: "Shared book", text: shared };
+const firstExample = shared !== undefined ? "shared" : (params.get("example") ?? "bakery");
 const STORAGE_KEY = "entrypad.editor.settings";
 
 function loadSettings(): EntrypadSettings {
@@ -51,7 +55,21 @@ function storeSettings(settings: EntrypadSettings): void {
 }
 
 /** Settings the editor doesn't use yet; they stay editable and are marked. */
-const notHere = (key: string) => key.startsWith("sharing.");
+const notHere = (_key: string) => false;
+
+function download(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** The visual an embed link shows, from the book's first show line it can draw. */
+const EMBEDDABLE = ["t-accounts", "equation", "entry-cards"];
 
 const editorTheme = EditorView.theme({
   "&": { height: "100%", fontSize: "13.5px", backgroundColor: theme.surface },
@@ -84,6 +102,8 @@ function App() {
   const tAccountsEl = useRef<HTMLElement>(null);
   const cardsEl = useRef<HTMLElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [shareStatus, setShareStatus] = useState("");
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
@@ -157,6 +177,41 @@ function App() {
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next.text } });
   };
 
+  const replaceText = (next: string) => {
+    const view = viewRef.current;
+    if (!view) return;
+    setAt(undefined);
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next } });
+  };
+
+  /** The book as it should travel: with set lines for the reader's own file settings. */
+  const outgoing = () => shareableText(text, analysis, settings);
+  const fileBase = slug(book.name ?? "book");
+
+  const copy = async (link: string, what: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      const limit = settings.sharing.linkWarningLength;
+      setShareStatus(
+        link.length > limit
+          ? `${what} copied. It is ${link.length.toLocaleString("en-US")} characters long, and some apps cut links over ${limit.toLocaleString("en-US")}; saving a file may be safer.`
+          : `${what} copied.`,
+      );
+    } catch {
+      setShareStatus("This browser didn't allow copying. Try again, or save a file instead.");
+    }
+  };
+  const shareLink = () => bookUrl("/editor/", outgoing());
+  const embedVisual = analysis.shows.find((s) => EMBEDDABLE.includes(s.visual))?.visual ?? "t-accounts";
+  const embedLink = () => bookUrl("/embed/", outgoing(), `?visual=${embedVisual}`);
+
+  const openFile = async (file: File | undefined) => {
+    if (!file) return;
+    replaceText(await file.text());
+    setExample("file");
+    setShareStatus(`Opened ${file.name}.`);
+  };
+
   /** A drag in any visual: write the changed entries back into the text. */
   const onBookChange = (next: Book) => {
     if (viewRef.current) writeBook(viewRef.current, analysis, next, settings);
@@ -189,6 +244,7 @@ function App() {
           <label>
             Example{" "}
             <select id="example" value={example} onChange={(e) => loadExample(e.target.value)}>
+              {example === "file" && <option value="file">Opened file</option>}
               {Object.entries(EXAMPLES).map(([key, e]) => (
                 <option key={key} value={key}>
                   {e.label}
@@ -196,6 +252,37 @@ function App() {
               ))}
             </select>
           </label>
+          <span className="share">
+            <button type="button" id="open-file" onClick={() => fileInput.current?.click()}>
+              Open file
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".entrypad,.txt,text/plain"
+              hidden
+              onChange={(e) => {
+                void openFile(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              id="save-file"
+              onClick={() => download(new Blob([outgoing()], { type: "text/plain;charset=utf-8" }), `${fileBase}.entrypad`)}
+            >
+              Save file
+            </button>
+            <button type="button" id="copy-link" onClick={() => void copy(shareLink(), "Link")}>
+              Copy link
+            </button>
+            <button type="button" id="copy-embed" onClick={() => void copy(embedLink(), "Embed link")}>
+              Copy embed link
+            </button>
+            <span id="share-status" role="status">
+              {shareStatus}
+            </span>
+          </span>
           <span className="step">
             <button type="button" id="prev" onClick={() => step(-1)} aria-label="Previous entry">
               ←
@@ -225,6 +312,7 @@ function App() {
               fileName={slug(book.name ?? "book", "equation")}
               settings={settings}
               count={count}
+              shareLink={shareLink}
               renderAt={(n) => <Equation book={book} at={n} showDiagnostics={false} maxWidth={width} />}
             />
           </section>
@@ -244,6 +332,7 @@ function App() {
               fileName={slug(book.name ?? "book", "t-accounts")}
               settings={settings}
               count={count}
+              shareLink={shareLink}
               renderAt={(n) => <TAccount book={book} at={n} {...(tAccounts && { accounts: tAccounts })} maxWidth={width} />}
             />
           </section>
@@ -262,6 +351,7 @@ function App() {
               fileName={slug(book.name ?? "book", "entries")}
               settings={settings}
               count={count}
+              shareLink={shareLink}
               renderAt={(n) => <EntryCards book={book} at={n} maxWidth={width} />}
             />
           </section>

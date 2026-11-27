@@ -23,6 +23,8 @@ export interface ExportMenuProps {
   count: number;
   /** The visual as it stood after `at` entries, read-only and without squiggles, for GIF frames. */
   renderAt: (at: number) => ReactElement;
+  /** A share link to the live book, for "GIF + link". */
+  shareLink: () => string;
 }
 
 /** "Sunrise Bakery" and "T-accounts" -> "sunrise-bakery-t-accounts". */
@@ -120,7 +122,7 @@ export async function stepThroughGif(renderAt: (at: number) => ReactElement, cou
   return gifBlob(encodeGif(frames));
 }
 
-export function ExportMenu({ section, fileName, settings, count, renderAt }: ExportMenuProps) {
+export function ExportMenu({ section, fileName, settings, count, renderAt, shareLink }: ExportMenuProps) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -176,6 +178,18 @@ export function ExportMenu({ section, fileName, settings, count, renderAt }: Exp
         return "GIF saved";
       },
     ],
+    [
+      "export-gif-link",
+      "GIF + link",
+      async () => {
+        // For Google Slides and Keynote, which can't show live pages: the GIF
+        // goes on the slide and links to the live book. The link is copied
+        // first, while the click still allows clipboard writes.
+        await navigator.clipboard.writeText(shareLink());
+        download(await stepThroughGif(renderAt, count, settings), `${fileName}.gif`);
+        return "GIF saved and link copied. Put the GIF on your slide and add the link to it.";
+      },
+    ],
   ];
 
   return (
@@ -183,7 +197,7 @@ export function ExportMenu({ section, fileName, settings, count, renderAt }: Exp
       <summary>Export</summary>
       <div className="export-items">
         {items.map(([id, label, task]) => (
-          <button key={id} type="button" className={id} disabled={busy} onClick={run(id === "export-gif" ? "Making the GIF…" : "Exporting…", task)}>
+          <button key={id} type="button" className={id} disabled={busy} onClick={run(id.startsWith("export-gif") ? "Making the GIF…" : "Exporting…", task)}>
             {label}
           </button>
         ))}
